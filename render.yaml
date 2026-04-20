@@ -1,5 +1,5 @@
 projects:
-  - name: vip-number-wala
+  - name: VipNumberWala
     environments:
       - name: Production
         envVarGroups:
