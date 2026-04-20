@@ -1,33 +1,35 @@
-services:
-  # ─── BACKEND + WHATSAPP BOT (Web Service) ──────────────────────────
-  - type: web
-    name: vip-backend
-    env: docker
-    plan: free # Note: free tier will spin down. Consider 'starter' for 24/7.
-    region: singapore # Choose closest to you
-    envVars:
-      - key: PORT
-        value: 3001
-      - key: NODE_ENV
-        value: production
-      - fromGroup: vip-secrets # Create this group in Render dashboard
+projects:
+  - name: vip-number-wala
+    environments:
+      - name: production
+        services:
+          # ─── BACKEND + WHATSAPP BOT ──────────────────────────────
+          - type: web
+            name: vip-backend
+            env: docker
+            plan: free
+            region: singapore
+            envVars:
+              - key: PORT
+                value: 3001
+              - key: NODE_ENV
+                value: production
+              - fromGroup: vip-secrets
 
-  # ─── FRONTEND (Static Site) ────────────────────────────────────────
-  - type: web
-    name: vip-frontend
-    runtime: static
-    buildCommand: npm run build
-    staticPublishPath: ./dist
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: vip-backend
-          property: host
-      - key: VITE_WS_URL
-        fromService:
-          type: web
-          name: vip-backend
-          property: host
-        # Note: Render static sites auto-inject HTTPS
-
+          # ─── FRONTEND (Static Site) ──────────────────────────────
+          - type: web
+            name: vip-frontend
+            runtime: static
+            buildCommand: npm run build
+            staticPublishPath: ./dist
+            envVars:
+              - key: VITE_API_URL
+                fromService:
+                  type: web
+                  name: vip-backend
+                  property: host
+              - key: VITE_WS_URL
+                fromService:
+                  type: web
+                  name: vip-backend
+                  property: host
