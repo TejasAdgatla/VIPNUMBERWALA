@@ -30,3 +30,15 @@ services:
           name: vip-backend
           property: host
         # Note: Render static sites auto-inject HTTPS
+
+envVarGroups:
+  - name: vip-secrets
+    envVars:
+      - key: SUPABASE_URL
+      - key: SUPABASE_ANON_KEY
+      - key: CASHFREE_CLIENT_ID
+      - key: CASHFREE_CLIENT_SECRET
+      - key: CASHFREE_BASE_URL
+      - key: VITE_CASHFREE_MODE
+      - key: CASHFREE_RETURN_URL
+
