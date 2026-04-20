@@ -1,0 +1,104 @@
+:root {
+  /* ── Backgrounds (warm light cream) ─────────────────────────── */
+  --bg-void:    #FEFCF8;
+  --bg-deep:    #F9F5EE;
+  --bg-surface: #FFFFFF;
+  --bg-elevated:#F4EFE6;
+  --bg-glass:   rgba(255, 252, 248, 0.88);
+
+  /* ── Borders ─────────────────────────────────────────────────── */
+  --border-subtle:  rgba(0, 0, 0, 0.07);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong:  rgba(0, 0, 0, 0.22);
+  --border-accent:  rgba(180, 135, 15, 0.45);
+  --border-gold-glow: rgba(180, 135, 15, 0.22);
+
+  /* ── Royal Gold ─────────────────────────────────────────────── */
+  --gold-900: #3D2800;
+  --gold-700: #7A5200;
+  --gold-500: #B4870F;
+  --gold-400: #C9971C;
+  --gold-300: #D4AF37;
+  --gold-200: #E8CC68;
+  --gold-100: #F9EFC8;
+
+  --accent-gold:        #B4870F;
+  --accent-gold-bright: #C9971C;
+  --accent-gold-dim:    #D4AF37;
+  --accent-gold-bg:     #FDF6E3;
+
+  /* ── Saffron/Orange (Indian palette accent) ─────────────────── */
+  --accent-saffron:     #D97706;
+  --accent-saffron-dim: #FEF3C7;
+
+  /* ── Cosmic Purple (lighter, warmer for light bg) ───────────── */
+  --purple-900: #3B0764;
+  --purple-700: #6D28D9;
+  --purple-500: #8B5CF6;
+  --purple-300: #C4B5FD;
+  --purple-bg:  #F5F3FF;
+
+  --accent-purple-dim:    #F5F3FF;
+  --accent-purple:        #6D28D9;
+  --accent-purple-mid:    #8B5CF6;
+  --accent-purple-bright: #7C3AED;
+
+  /* ── Text (dark warm browns) ────────────────────────────────── */
+  --text-primary:   #1C1208;
+  --text-secondary: #5C4B2A;
+  --text-tertiary:  #9C8C6A;
+  --text-accent:    #B4870F;
+  --text-on-accent: #FEFCF8;
+  --text-muted:     #C9B99A;
+
+  /* ── Semantic ────────────────────────────────────────────────── */
+  --success-bg:     rgba(5, 150, 105, 0.08);
+  --success-text:   #059669;
+  --success-border: rgba(5, 150, 105, 0.25);
+
+  --error-bg:     rgba(220, 38, 38, 0.08);
+  --error-text:   #DC2626;
+  --error-border: rgba(220, 38, 38, 0.25);
+
+  --warning-bg:     rgba(217, 119, 6, 0.08);
+  --warning-text:   #D97706;
+  --warning-border: rgba(217, 119, 6, 0.25);
+
+  /* ── Gradients ───────────────────────────────────────────────── */
+  --gradient-gold: linear-gradient(135deg, #7A5200 0%, #B4870F 45%, #D4AF37 80%, #B4870F 100%);
+  --gradient-gold-subtle: linear-gradient(135deg, rgba(180,135,15,0.10) 0%, rgba(180,135,15,0.03) 100%);
+  --gradient-cosmic: radial-gradient(ellipse 140% 80% at 50% -20%, rgba(109,40,217,0.10) 0%, rgba(254,252,248,0) 65%),
+                     radial-gradient(ellipse 80% 60% at 100% 80%, rgba(180,135,15,0.06) 0%, transparent 60%),
+                     linear-gradient(180deg, #F9F5EE 0%, #FEFCF8 100%);
+  --gradient-hero: radial-gradient(ellipse 130% 90% at 50% -15%, rgba(109,40,217,0.12) 0%, rgba(254,252,248,0) 60%),
+                   radial-gradient(ellipse 80% 60% at 90% 60%, rgba(180,135,15,0.07) 0%, transparent 60%);
+  --gradient-card-shine: linear-gradient(135deg, rgba(180,135,15,0.06) 0%, transparent 60%);
+  --gradient-text-gold: linear-gradient(90deg, #7A5200 0%, #B4870F 35%, #D4AF37 65%, #B4870F 100%);
+  --gradient-purple-gold: linear-gradient(135deg, #6D28D9 0%, #B4870F 100%);
+  --gradient-surface-to-void: linear-gradient(180deg, #FFFFFF 0%, #FEFCF8 100%);
+  --gradient-number-card: linear-gradient(145deg, #FFFFFF 0%, #FAF7F2 100%);
+
+  /* ── Shadows (warm, soft) ────────────────────────────────────── */
+  --shadow-xs:   0 1px 3px rgba(28,18,8,0.07), 0 1px 2px rgba(28,18,8,0.05);
+  --shadow-sm:   0 2px 8px rgba(28,18,8,0.08), 0 1px 3px rgba(28,18,8,0.06);
+  --shadow-md:   0 6px 24px rgba(28,18,8,0.09), 0 2px 8px rgba(28,18,8,0.06);
+  --shadow-lg:   0 16px 48px rgba(28,18,8,0.10), 0 4px 16px rgba(28,18,8,0.07);
+  --shadow-card: 0 2px 12px rgba(28,18,8,0.08), 0 1px 3px rgba(28,18,8,0.05);
+  --shadow-gold-btn: 0 6px 24px rgba(180,135,15,0.30), 0 2px 6px rgba(0,0,0,0.08);
+
+  /* ── Spacing ─────────────────────────────────────────────────── */
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;
+  --space-4: 16px;  --space-5: 20px;  --space-6: 24px;
+  --space-8: 32px;  --space-10: 40px; --space-12: 48px;
+  --space-16: 64px; --space-20: 80px; --space-24: 96px; --space-32: 128px;
+
+  /* ── Border Radius ───────────────────────────────────────────── */
+  --radius-none: 0px;  --radius-xs: 4px;   --radius-sm: 8px;
+  --radius-md: 12px;   --radius-lg: 16px;  --radius-xl: 24px;
+  --radius-2xl: 32px;  --radius-full: 9999px;
+
+  /* ── Animation ───────────────────────────────────────────────── */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
+}

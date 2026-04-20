@@ -1,0 +1,32 @@
+services:
+  # ─── BACKEND + WHATSAPP BOT (Web Service) ──────────────────────────
+  - type: web
+    name: vip-backend
+    env: docker
+    plan: free # Note: free tier will spin down. Consider 'starter' for 24/7.
+    region: singapore # Choose closest to you
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+      - fromGroup: vip-secrets # Create this group in Render dashboard
+
+  # ─── FRONTEND (Static Site) ────────────────────────────────────────
+  - type: static
+    name: vip-frontend
+    env: static
+    buildCommand: npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: vip-backend
+          property: host
+      - key: VITE_WS_URL
+        fromService:
+          type: web
+          name: vip-backend
+          property: host
+        # Note: Render static sites auto-inject HTTPS

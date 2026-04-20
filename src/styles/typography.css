@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,600;1,9..144,700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+
+/*
+  FONT SYSTEM:
+  ─ Fraunces  → Hero headlines, section titles, price displays, brand logo
+                (variable optical size — goes from elegant/serif-ish at small
+                sizes to impactful/slab at huge sizes. PERFECT for luxury India)
+  ─ Poppins   → Everything else: body, nav, labels, buttons, tags, captions
+                (India's most-loved brand font — round, clean, trusted)
+*/
+
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Poppins', 'Helvetica Neue', sans-serif;
+  --font-mono:    'Poppins', monospace;   /* numbers in body context */
+}
+
+/* ── Apply fonts ────────────────────────────────────────────────── */
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--bg-void);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fraunces for headings */
+h1, h2, h3, .font-display { font-family: var(--font-display); }
+/* Poppins for interactive / form elements (browser defaults otherwise apply) */
+button, input, select, textarea { font-family: var(--font-body); }
+
+/* ── Type Scale ─────────────────────────────────────────────────── */
+
+/* Hero — Fraunces at giant optical size looks INCREDIBLE */
+.text-display-2xl {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 7.5vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  font-optical-sizing: auto;
+}
+.text-display-xl {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-weight: 700;
+  line-height: 1.10;
+  letter-spacing: -0.02em;
+  font-optical-sizing: auto;
+}
+.text-display-lg {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3.5vw, 3rem);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  font-optical-sizing: auto;
+}
+.text-h1 { font-family: var(--font-display); font-size: 2rem;  font-weight: 700; line-height: 1.2; }
+.text-h2 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; line-height: 1.3; }
+.text-h3 { font-family: var(--font-body);    font-size: 1.05rem; font-weight: 600; line-height: 1.45; }
+
+.text-body-lg { font-family: var(--font-body); font-size: 1.05rem; font-weight: 400; line-height: 1.75; }
+.text-body    { font-family: var(--font-body); font-size: 0.9375rem; font-weight: 400; line-height: 1.7; }
+.text-body-sm { font-family: var(--font-body); font-size: 0.8125rem; font-weight: 400; line-height: 1.6; }
+
+.text-label {
+  font-family: var(--font-body);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.text-caption { font-family: var(--font-body); font-size: 0.6875rem; font-weight: 400; letter-spacing: 0.02em; }
+
+/* Phone number display — Fraunces makes digits look LUXURIOUS */
+.text-number-hero {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  font-optical-sizing: auto;
+}
+.tabular-number {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  font-optical-sizing: auto;
+}

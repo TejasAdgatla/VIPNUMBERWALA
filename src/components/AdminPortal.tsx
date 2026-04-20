@@ -1,0 +1,420 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNumbers } from '../context/NumbersContext';
+import type { VIPNumber } from '../context/NumbersContext';
+import { Trash2, PenLine, Plus, X, ToggleLeft, ToggleRight } from 'lucide-react';
+import WhatsAppManager from './WhatsAppManager';
+
+const PLANETS = ['Sun', 'Moon', 'Jupiter', 'Rahu', 'Mercury', 'Venus', 'Ketu', 'Saturn', 'Mars'];
+const OPERATORS = ['Airtel', 'Jio', 'Vi', 'BSNL', 'MTNL'];
+const CATEGORIES = ['VVIP Triple', 'VVIP Rare', 'VVIP Mirror', 'Business', 'Leadership', '786 Lucky', 'Birthday Special', 'Sequential'];
+
+const EMPTY_FORM = {
+  phone: '', price: '', numerologyTotal: 1,
+  category: 'VVIP Triple', energy: 'Sun', operator: 'Airtel', available: true,
+};
+
+const TABS = [
+  { id: 'inventory', label: '📋 VIP Numbers' },
+  { id: 'whatsapp',  label: '📱 WhatsApp' },
+  { id: 'orders',    label: '📦 Orders' },
+  { id: 'settings',  label: '⚙️ Settings' },
+];
+
+const AdminPortal: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('inventory');
+  const { numbers, addNumber, updateNumber, deleteNumber, refresh: refreshNums } = useNumbers();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editTarget, setEditTarget] = useState<VIPNumber | null>(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  const openAddForm = () => { setEditTarget(null); setForm(EMPTY_FORM); setShowForm(true); };
+  const openEditForm = (num: VIPNumber) => {
+    setEditTarget(num);
+    setForm({ phone: num.phone, price: num.price, numerologyTotal: num.numerologyTotal, category: num.category, energy: num.energy, operator: num.operator, available: num.available });
+    setShowForm(true);
+  };
+  const fetchOrders = async () => {
+    setLoadingOrders(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/orders`);
+      if (res.ok) setOrders(await res.json());
+    } finally { setLoadingOrders(false); }
+  };
+
+  useEffect(() => { 
+    if (activeTab === 'orders') fetchOrders(); 
+  }, [activeTab]);
+
+  const handleOrderAction = async (id: string, action: 'approve' | 'reject') => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/orders/${id}/${action}`, { method: 'POST' });
+    if (res.ok) {
+      alert(`Order ${action}d successfully. Message sent to customer.`);
+      fetchOrders();
+      refreshNums();
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editTarget) updateNumber({ ...editTarget, ...form });
+    else addNumber(form);
+    setShowForm(false);
+    setForm(EMPTY_FORM);
+  };
+  const toggleAvailability = (num: VIPNumber) => updateNumber({ ...num, available: !num.available });
+  const [showBulkSync, setShowBulkSync] = useState(false);
+  const [bulkJson, setBulkJson] = useState(JSON.stringify({
+    upsert: [],
+    delete: []
+  }, null, 2));
+  const [syncResult, setSyncResult] = useState<any>(null);
+
+  const runBulkSync = async () => {
+    try {
+      const payload = JSON.parse(bulkJson);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/numbers/bulk-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      setSyncResult(data);
+      if (!data.errors?.length) setTimeout(() => { setShowBulkSync(false); setSyncResult(null); }, 3000);
+    } catch (e) {
+      alert('Invalid JSON! Please check your formatting.');
+    }
+  };
+
+  return (
+    <div className="admin-container">
+
+      {/* ── Sidebar ── */}
+      <nav className="admin-sidebar">
+        <div>
+          <div className="admin-logo">VIP<span>Number</span>Wala</div>
+          <p className="admin-tagline">Admin Dashboard</p>
+          <div className="nav-links">
+            {TABS.map(tab => (
+              <button key={tab.id} className={`nav-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setActiveTab(tab.id)}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <a href="/" target="_blank" className="preview-link">↗ View Live Site</a>
+        </div>
+      </nav>
+
+      {/* ── Main ── */}
+      <main className="admin-main">
+
+        {/* Top bar */}
+        <div className="admin-topbar">
+          <div>
+            <h1>{TABS.find(t => t.id === activeTab)?.label.replace(/^[^\s]+ /, '') || ''}</h1>
+            <p className="admin-sub">{numbers.length} numbers in inventory · {numbers.filter(n => n.available).length} available</p>
+          </div>
+          {activeTab === 'inventory' && (
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button className="btn-outline" onClick={() => setShowBulkSync(true)}>
+                📦 Bulk Sync
+              </button>
+              <button className="btn-primary add-btn" onClick={openAddForm}>
+                <Plus size={18} /> Add Number
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ── Inventory Tab ── */}
+        {activeTab === 'inventory' && (
+          <motion.div key="inventory" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Number</th><th>Category</th><th>Price</th><th>Numerology</th><th>Operator</th><th>Status</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {numbers.length === 0 && (
+                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: '#aaa' }}>No numbers yet. Click "Add Number" to get started.</td></tr>
+                  )}
+                  {numbers.map(num => (
+                    <tr key={num.id} className={!num.available ? 'row-dimmed' : ''}>
+                      <td className="td-phone">{num.phone}</td>
+                      <td><span className="cat-chip">{num.category}</span></td>
+                      <td className="td-price">{num.price}</td>
+                      <td>
+                        <span className="num-chip">No.{num.numerologyTotal}</span>
+                        <span className="planet-chip">{num.energy}</span>
+                      </td>
+                      <td>{num.operator}</td>
+                      <td>
+                        <button className={`toggle-btn ${num.available ? 'on' : 'off'}`} onClick={() => toggleAvailability(num)}>
+                          {num.available ? <><ToggleRight size={16} /> Live</> : <><ToggleLeft size={16} /> Hidden</>}
+                        </button>
+                      </td>
+                      <td className="td-actions">
+                        <button className="icon-btn edit" onClick={() => openEditForm(num)} title="Edit"><PenLine size={15} /></button>
+                        <button className="icon-btn del" onClick={() => deleteNumber(num.id)} title="Delete"><Trash2 size={15} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── WhatsApp Tab ── */}
+        {activeTab === 'whatsapp' && (
+          <motion.div key="whatsapp" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <WhatsAppManager />
+          </motion.div>
+        )}
+
+
+
+        {/* ── Orders Tab ── */}
+        {activeTab === 'orders' && (
+          <motion.div key="orders" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Order ID</th><th>Number</th><th>Price</th><th>WhatsApp</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  {loadingOrders ? (
+                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>Loading Orders...</td></tr>
+                  ) : orders.length === 0 ? (
+                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: '#aaa' }}>No active orders found in database.</td></tr>
+                  ) : orders.map(ord => (
+                    <tr key={ord.id}>
+                      <td><div style={{ fontSize: '0.75rem', opacity: 0.6 }}>{ord.id.slice(0,8)}...</div></td>
+                      <td className="td-phone">{ord.vip_numbers?.phone || 'Loading...'}</td>
+                      <td className="td-price">{ord.amount || ord.vip_numbers?.price}</td>
+                      <td>{ord.customer_wa.split('@')[0]}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <span className={`badge ${ord.status}`}>{ord.status.replace(/_/g, ' ')}</span>
+                          
+                          {ord.screenshot_url && (
+                             <button className="btn-outline" onClick={() => {
+                               const win = window.open();
+                               win?.document.write(`<img src="${ord.screenshot_url}" style="max-width:100%"/>`);
+                             }} style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>🖼️ View Proof</button>
+                          )}
+
+                          {ord.status === 'awaiting_reconciliation' && (
+                            <div style={{ display: 'flex', gap: '0.4rem' }}>
+                              <button className="btn-primary" onClick={() => handleOrderAction(ord.id, 'approve')} style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', background: '#059669' }}>Verify</button>
+                              <button className="btn-outline" onClick={() => handleOrderAction(ord.id, 'reject')} style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', color: '#dc2626', borderColor: '#dc2626' }}>Reject</button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Settings Tab ── */}
+        {activeTab === 'settings' && (
+          <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div className="settings-card">
+              <h3>Site Configuration</h3>
+              <div className="settings-form">
+                <div className="field-group"><label>Brand Name</label><input type="text" defaultValue="VIPNumberWala" /></div>
+                <div className="field-group"><label>UPI ID</label><input type="text" defaultValue="vipnumberwala@upi" /></div>
+                <div className="field-group"><label>Hero Tagline</label><textarea rows={3} defaultValue="India's Most Trusted VIP Numbers Destination." /></div>
+                <button className="btn-primary">Save Changes</button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </main>
+
+      <AnimatePresence>
+        {showBulkSync && (
+          <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div className="modal-box" style={{ maxWidth: '640px' }} initial={{ scale: 0.95 }} animate={{ scale: 1 }}>
+              <div className="modal-header">
+                <h2>📦 Bulk Inventory Sync</h2>
+                <button className="modal-close" onClick={() => setShowBulkSync(false)}><X size={20} /></button>
+              </div>
+              <p className="modal-sub">Paste your JSON data below. This will **Upsert** (Add/Update) and **Delete** specific numbers.</p>
+              
+              <textarea 
+                className="bulk-textarea"
+                value={bulkJson}
+                onChange={e => setBulkJson(e.target.value)}
+                rows={12}
+                spellCheck={false}
+              />
+
+              {syncResult && (
+                <div className={`sync-feedback ${syncResult.errors?.length ? 'err' : 'ok'}`}>
+                  {syncResult.errors?.length ? '❌ Errors found!' : '✅ Sync successful!'}
+                  <div className="sync-stats">
+                    <span>Upserted: {syncResult.upserted}</span>
+                    <span>Deleted: {syncResult.deleted}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button className="btn-outline" onClick={() => setShowBulkSync(false)}>Cancel</button>
+                <button className="btn-primary" onClick={runBulkSync}>▶️ Run Daily Sync</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Add / Edit Modal ── */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={e => { if (e.target === e.currentTarget) setShowForm(false); }}>
+            <motion.div className="modal-box" initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}>
+              <div className="modal-header">
+                <h2>{editTarget ? 'Edit Number' : 'Add New Number'}</h2>
+                <button className="modal-close" onClick={() => setShowForm(false)}><X size={20} /></button>
+              </div>
+              <form onSubmit={handleSubmit} className="modal-form">
+                <div className="field-group">
+                  <label>Phone Number *</label>
+                  <input type="text" placeholder="+91 XXXXX XXXXX" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} required />
+                </div>
+                <div className="form-row">
+                  <div className="field-group">
+                    <label>Price *</label>
+                    <input type="text" placeholder="₹10,000" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required />
+                  </div>
+                  <div className="field-group">
+                    <label>Chaldean Number (1–9)</label>
+                    <input type="number" min={1} max={9} value={form.numerologyTotal} onChange={e => setForm(f => ({ ...f, numerologyTotal: Number(e.target.value) }))} required />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="field-group">
+                    <label>Category</label>
+                    <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+                      {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="field-group">
+                    <label>Operator</label>
+                    <select value={form.operator} onChange={e => setForm(f => ({ ...f, operator: e.target.value }))}>
+                      {OPERATORS.map(o => <option key={o}>{o}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="field-group">
+                  <label>Planetary Energy</label>
+                  <select value={form.energy} onChange={e => setForm(f => ({ ...f, energy: e.target.value }))}>
+                    {PLANETS.map(p => <option key={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div className="field-group checkbox-group">
+                  <label>
+                    <input type="checkbox" checked={form.available} onChange={e => setForm(f => ({ ...f, available: e.target.checked }))} />
+                    Show on storefront (Available)
+                  </label>
+                </div>
+                <div className="modal-actions">
+                  <button type="button" className="btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
+                  <button type="submit" className="btn-primary">{editTarget ? 'Save Changes' : 'Add Number'}</button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        .admin-container { display: flex; min-height: 100vh; background: #f8f7f4; font-family: var(--font-sans); }
+
+        .admin-sidebar { width: 220px; flex-shrink: 0; background: #1a1713; color: #fff; padding: 2rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .admin-logo { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .admin-logo span { color: var(--accent-color); }
+        .admin-tagline { font-size: 0.72rem; opacity: 0.45; margin-bottom: 2rem; }
+        .nav-links { display: flex; flex-direction: column; gap: 0.4rem; }
+        .nav-btn { text-align: left; padding: 0.7rem 1rem; border-radius: var(--radius-sm); font-size: 0.88rem; color: rgba(255,255,255,0.55); transition: var(--transition-smooth); background: transparent; }
+        .nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .nav-btn.active { background: var(--accent-color); color: white; }
+        .preview-link { font-size: 0.78rem; opacity: 0.45; padding: 0.4rem 1rem; display: block; transition: opacity 0.2s; }
+        .preview-link:hover { opacity: 1; color: var(--accent-color); }
+
+        .admin-main { flex: 1; padding: 2.5rem 3rem; overflow-x: auto; }
+        .admin-topbar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+        .admin-topbar h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+        .admin-sub { font-size: 0.82rem; color: #999; }
+        .add-btn { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; white-space: nowrap; }
+
+        .table-wrap { background: white; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f8f7f4; }
+        th { padding: 0.85rem 1.25rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600; }
+        td { padding: 1rem 1.25rem; border-top: 1px solid #f0f0f0; font-size: 0.88rem; vertical-align: middle; }
+        .row-dimmed td { opacity: 0.4; }
+        .td-phone { font-weight: 700; font-family: var(--font-serif); font-size: 0.98rem; }
+        .td-price { font-weight: 700; }
+        .td-actions { display: flex; gap: 0.5rem; }
+        .cat-chip { font-size: 0.72rem; background: var(--secondary-bg); padding: 0.2rem 0.55rem; border-radius: 99px; }
+        .num-chip { font-size: 0.7rem; background: var(--accent-color); color: white; padding: 0.18rem 0.5rem; border-radius: 99px; margin-right: 0.3rem; }
+        .planet-chip { font-size: 0.7rem; background: #eee; color: #555; padding: 0.18rem 0.5rem; border-radius: 99px; }
+        .badge { font-size: 0.72rem; padding: 0.28rem 0.65rem; border-radius: 99px; font-weight: 600; }
+        .badge.pending { background: #fef3c7; color: #92400e; }
+        .badge.awaiting_reconciliation { background: #dbeafe; color: #1e40af; }
+        .badge.completed { background: #d1fae5; color: #065f46; }
+        .badge.rejected { background: #fee2e2; color: #b91c1c; }
+        .toggle-btn { display: flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; font-weight: 600; padding: 0.28rem 0.6rem; border-radius: 99px; transition: var(--transition-smooth); }
+        .toggle-btn.on { background: #d1fae5; color: #065f46; }
+        .toggle-btn.off { background: #f3f4f6; color: #9ca3af; }
+        .icon-btn { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: var(--transition-smooth); }
+        .icon-btn.edit { background: #eff6ff; color: #2563eb; }
+        .icon-btn.edit:hover { background: #2563eb; color: white; }
+        .icon-btn.del { background: #fef2f2; color: #dc2626; }
+        .icon-btn.del:hover { background: #dc2626; color: white; }
+
+        .settings-card { background: white; border-radius: var(--radius-md); padding: 2.5rem; max-width: 560px; box-shadow: var(--shadow-sm); }
+        .settings-card h3 { font-size: 1.2rem; margin-bottom: 2rem; font-family: var(--font-sans); }
+        .settings-form { display: flex; flex-direction: column; gap: 1.25rem; }
+        .field-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .field-group label { font-size: 0.82rem; font-weight: 600; color: #555; }
+        .field-group input, .field-group select, .field-group textarea { padding: 0.7rem 0.9rem; border: 1.5px solid #e0e0e0; border-radius: var(--radius-sm); font-family: var(--font-sans); font-size: 0.92rem; transition: border-color 0.2s; }
+        .field-group input:focus, .field-group select:focus, .field-group textarea:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(230,81,0,0.1); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .checkbox-group label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; }
+        .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-color); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+        .modal-box { background: white; border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 520px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .modal-header h2 { font-size: 1.4rem; }
+        .modal-close { color: #888; transition: color 0.2s; }
+        .modal-close:hover { color: var(--text-color); }
+        .modal-form { display: flex; flex-direction: column; gap: 1.2rem; }
+        .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; border-top: 1px solid #f0f0f0; padding-top: 1.25rem; }
+
+        .bulk-textarea { width: 100%; font-family: monospace; font-size: 0.85rem; padding: 1rem; background: #1a1713; color: #10b981; border-radius: 8px; border: none; outline: none; transition: 0.2s; }
+        .bulk-textarea:focus { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+        .sync-feedback { margin-top: 1.5rem; padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; }
+        .sync-feedback.ok { background: #ecfdf5; color: #065f46; }
+        .sync-feedback.err { background: #fef2f2; color: #991b1b; }
+        .sync-stats { display: flex; gap: 1.5rem; margin-top: 0.5rem; font-size: 0.8rem; font-weight: 400; opacity: 0.8; }
+      `}</style>
+    </div>
+  );
+};
+
+export default AdminPortal;
