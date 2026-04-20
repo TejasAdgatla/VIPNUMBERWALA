@@ -117,7 +117,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <button onClick={() => setIsMenuOpen(false)} style={{ position: 'absolute', top: 24, right: 24, padding: 8, color: 'var(--text-primary)' }}><X size={24} /></button>
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', gap: 32, padding: 40 }}>
-              {NAV_LINKS.map((link, i) => (
+              {NAV_LINKS.map((link) => (
                 <NavLink key={link.to} to={link.to} end style={{ fontSize: 28, fontWeight: 700 }}>{link.label}</NavLink>
               ))}
               {!user && <button onClick={() => { setIsMenuOpen(false); setIsAuthOpen(true); }} className="btn-primary" style={{ fontSize: 20 }}>Login / Signup</button>}
