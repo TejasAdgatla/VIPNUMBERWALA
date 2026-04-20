@@ -1,73 +1,45 @@
-# React + TypeScript + Vite
+# VIPNumberWala E-commerce & WhatsApp Automation
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This platform is a premium VIP mobile number marketplace featuring automated WhatsApp verification, planetary numerology analysis, and a native Cashfree payment gateway.
 
-Currently, two official plugins are available:
+## 🚀 Deployment Guide (Render)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+This project is configured for **Render.com** using a Blueprint (`render.yaml`).
 
-## React Compiler
+### Prerequisites
+- GitHub Account
+- Render Account
+- Cashfree Merchant Credentials (Production/Sandbox)
+- Supabase Account (PostgreSQL)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Steps to Deploy
+1. **GitHub**: Create a new private repository on GitHub and push this code:
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   git branch -M main
+   git push -u origin main
+   ```
+2. **Render**:
+   - Go to [dashboard.render.com](https://dashboard.render.com).
+   - Click **Blueprints** -> **New Blueprint Instance**.
+   - Connect your GitHub repo.
+   - It will detect the `render.yaml` file.
+3. **Secrets**: 
+   - When prompted for the `vip-secrets` group, add the following:
+     - `SUPABASE_URL`
+     - `SUPABASE_ANON_KEY`
+     - `CASHFREE_CLIENT_ID`
+     - `CASHFREE_CLIENT_SECRET`
+     - `CASHFREE_BASE_URL` (https://api.cashfree.com/pg)
+     - `VITE_CASHFREE_MODE` (production)
+     - `CASHFREE_RETURN_URL` (Your Render frontend URL + /checkout/status?order_id={order_id})
+4. **Go Live**: Click **Deploy**.
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
+- **Frontend**: React, Vite, Framer Motion, Lucide Icons.
+- **Backend**: Node.js, Express, WhatsApp-web.js (Puppeteer), Axios.
+- **Database**: Supabase (PostgreSQL).
+- **Payment**: Cashfree Payments (v3 SDK).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🛡️ Security
+Sensitive files like `.env` and WhatsApp session data are strictly ignored in `.gitignore`. **NEVER** commit your real keys to GitHub.
