@@ -36,3 +36,7 @@ projects:
                   type: web
                   name: vip-backend
                   property: host
+            routes:
+              - type: rewrite
+                source: /*
+                destination: /index.html
