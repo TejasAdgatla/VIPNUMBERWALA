@@ -9,7 +9,7 @@ const CheckoutStatusPage: React.FC = () => {
   const navigate = useNavigate();
   const { clearCart } = useCart();
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<'SUCCESS' | 'FAILED' | 'PENDING' | null>(null);
+  const [status, setStatus] = useState<'SUCCESS' | 'FAILED' | 'PENDING' | 'PAID' | null>(null);
   
   const orderId = searchParams.get('order_id');
 
@@ -25,7 +25,7 @@ const CheckoutStatusPage: React.FC = () => {
         const data = await res.json();
         
         setStatus(data.order_status);
-        if (data.order_status === 'PAID') {
+        if (data.order_status === 'PAID' || data.order_status === 'SUCCESS') {
           clearCart();
         }
       } catch (e) {
@@ -53,7 +53,7 @@ const CheckoutStatusPage: React.FC = () => {
     <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', maxWidth: 500, padding: 40, background: '#FFF', borderRadius: 32, boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border-subtle)' }}>
         
-        {status === 'PAID' ? (
+        {(status === 'PAID' || status === 'SUCCESS') ? (
           <>
             <div style={{ width: 80, height: 80, background: '#D1FAE5', color: '#059669', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
               <CheckCircle2 size={48} />

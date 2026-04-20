@@ -8,7 +8,7 @@ const WS_URL = API.replace('http', 'ws'); // Automatically match protocol and ho
 interface Instance {
   id: string;
   name: string;
-  status: 'initializing' | 'waiting_scan' | 'authenticated' | 'connected' | 'disconnected' | 'error';
+  status: 'initializing' | 'waiting_scan' | 'authenticated' | 'connected' | 'disconnected' | 'error' | 'needs_auth';
   phone: string | null;
   qr?: string | null;
 }

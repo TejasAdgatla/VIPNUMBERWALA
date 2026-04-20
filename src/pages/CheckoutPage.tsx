@@ -16,7 +16,7 @@ const CheckoutPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
+  const [status] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
   
   // Cashfree initialization
   const [cashfree, setCashfree] = useState<any>(null);

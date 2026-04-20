@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Menu, X, ArrowRight, PhoneCall, MessageSquare, ShoppingCart, User as UserIcon, LogOut } from 'lucide-react';
+import { Menu, X, ShoppingCart, User as UserIcon, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Chatbot from './Chatbot';
 import { useAuth } from '../context/AuthContext';
