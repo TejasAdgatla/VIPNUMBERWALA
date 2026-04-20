@@ -13,7 +13,7 @@ services:
       - fromGroup: vip-secrets # Create this group in Render dashboard
 
   # ─── FRONTEND (Static Site) ────────────────────────────────────────
-  - type: static
+  - type: static_site
     name: vip-frontend
     env: static
     buildCommand: npm run build
