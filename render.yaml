@@ -1,7 +1,9 @@
 projects:
   - name: vip-number-wala
     environments:
-      - name: production
+      - name: Production
+        envVarGroups:
+          - name: vip-secrets
         services:
           # ─── BACKEND + WHATSAPP BOT ──────────────────────────────
           - type: web
