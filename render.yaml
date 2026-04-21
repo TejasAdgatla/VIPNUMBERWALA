@@ -38,6 +38,7 @@ projects:
                   type: web
                   name: vip-backend
                   property: host
+              - fromGroup: vip-secrets
             routes:
               - type: rewrite
                 source: /*
