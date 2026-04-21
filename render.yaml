@@ -9,9 +9,11 @@ projects:
           # ─── BACKEND + WHATSAPP BOT ──────────────────────────────
           - type: web
             name: vip-backend
-            env: docker
+            env: node
             plan: free
             region: singapore
+            buildCommand: cd server && npm install
+            startCommand: cd server && node index.js
             envVars:
               - key: PORT
                 value: 3001
