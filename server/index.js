@@ -121,12 +121,15 @@ app.post('/payments/create-order', async (req, res) => {
   const { amount, customer_phone } = req.body;
   try {
     const phoneStr = String(customer_phone || '').replace(/\D/g, '');
+    const amountNum = Number(amount);
+    
     if (!phoneStr) return res.status(400).json({ error: 'Valid customer phone is required' });
+    if (!amountNum || amountNum < 1) return res.status(400).json({ error: 'Valid amount is required' });
     
     const orderId = `order_${Date.now()}`;
     const response = await axios.post(`${CF_CONFIG.baseUrl}/orders`, {
       order_id: orderId,
-      order_amount: amount,
+      order_amount: amountNum,
       order_currency: "INR",
       customer_details: {
         customer_id: phoneStr,
@@ -146,9 +149,31 @@ app.post('/payments/create-order', async (req, res) => {
     });
     res.json(response.data);
   } catch (error) {
-    console.error('Cashfree API Error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Payment initialization failed', details: error.response?.data || error.message });
+    const errorData = error.response?.data || error.message;
+    console.error('Cashfree API Error:', errorData);
+    res.status(500).json({ 
+      error: 'Payment initialization failed', 
+      details: errorData,
+      debug: {
+        has_client_id: !!CF_CONFIG.clientId,
+        has_client_secret: !!CF_CONFIG.clientSecret,
+        base_url: CF_CONFIG.baseUrl
+      }
+    });
   }
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    env: {
+      supabase: hasSupabase,
+      cashfree_id: !!CF_CONFIG.clientId,
+      cashfree_secret: !!CF_CONFIG.clientSecret,
+      cashfree_url: CF_CONFIG.baseUrl,
+      return_url: !!process.env.CASHFREE_RETURN_URL
+    }
+  });
 });
 
 app.get('/payments/verify/:orderId', async (req, res) => {
