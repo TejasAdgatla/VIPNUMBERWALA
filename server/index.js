@@ -143,7 +143,8 @@ app.post('/payments/create-order', async (req, res) => {
     });
     res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: 'Payment initialization failed' });
+    console.error('Cashfree API Error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Payment initialization failed', details: error.response?.data || error.message });
   }
 });
 
