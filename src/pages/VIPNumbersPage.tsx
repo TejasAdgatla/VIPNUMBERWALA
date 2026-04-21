@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import NumberGrid from '../components/NumberGrid';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, X, ChevronDown, Sparkles } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { useNumbers } from '../context/NumbersContext';
 
 const CHALDEAN_NUMS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
