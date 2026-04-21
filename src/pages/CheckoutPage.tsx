@@ -89,7 +89,7 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <div className="container" style={{ padding: '64px 20px', maxWidth: 1000 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: 60 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: 'clamp(32px, 6vw, 60px)' }}>
         
         {/* Left: Summary */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>

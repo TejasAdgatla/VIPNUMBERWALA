@@ -3,6 +3,8 @@ import { motion, useInView } from 'framer-motion';
 import { Shield, Sparkles, Phone, ArrowRight, Star, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NumberGrid from '../components/NumberGrid';
+import { useNumbers } from '../context/NumbersContext';
+import { useCart } from '../context/CartContext';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -25,8 +27,8 @@ const FEATURES = [
   },
   {
     icon: <Phone size={26} color="#059669" />,
-    title: 'Instant WhatsApp Process',
-    body: 'Talk to a real human expert on WhatsApp. Zero forms, zero waiting. Direct purchase conversation.',
+    title: 'Instant Support',
+    body: 'Talk to our team on WhatsApp. Zero forms, zero waiting. Get guided assistance for your purchase.',
   },
   {
     icon: <Sparkles size={26} color="#7C3AED" />,
@@ -36,7 +38,7 @@ const FEATURES = [
   {
     icon: <Star size={26} color="var(--accent-saffron)" />,
     title: 'India\'s Largest Inventory',
-    body: 'Over 500+ premium VIP numbers spanning Airtel, Jio, Vi & BSNL with 4.9★ rating nationwide.',
+    body: 'Over 500+ premium VIP numbers with a 4.9★ rating nationwide.',
   },
 ];
 
@@ -49,10 +51,21 @@ const TESTIMONIALS = [
 ];
 
 const Home: React.FC = () => {
+  const { numbers } = useNumbers();
+  const { addToCart } = useCart();
   const featuresRef = React.useRef(null);
   const featuresInView = useInView(featuresRef, { once: true, margin: '-10%' });
   const statsRef = React.useRef(null);
   const statsInView = useInView(statsRef, { once: true, margin: '-10%' });
+
+  const featuredNumber = React.useMemo(() => {
+    const sorted = [...numbers].sort((a, b) => {
+        const prA = parseInt(a.price.replace(/\D/g, '')) || 0;
+        const prB = parseInt(b.price.replace(/\D/g, '')) || 0;
+        return prB - prA;
+    });
+    return sorted[0] || { id: 'default', phone: '90000 09999', price: '₹59,999', category: 'VVIP Mirror', energy: 'Mars · 9', available: true };
+  }, [numbers]);
 
   return (
     <div style={{ background: 'var(--bg-void)' }}>
@@ -88,14 +101,14 @@ const Home: React.FC = () => {
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))',
-            gap: '80px', alignItems: 'center',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 440px), 1fr))',
+            gap: 'clamp(40px, 8vw, 80px)', alignItems: 'center',
           }}>
 
             {/* Left */}
             <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <motion.div variants={fadeUp}>
-                <span className="badge badge-gold">India's #1 VIP Number Platform</span>
+                <span className="badge badge-gold">India's #1 Premium Number Platform</span>
               </motion.div>
 
               <motion.h1 variants={fadeUp} style={{
@@ -125,7 +138,7 @@ const Home: React.FC = () => {
 
               <motion.div variants={fadeUp} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <Link to="/vip-numbers" className="btn-primary btn-large">
-                  Browse VIP Numbers <ArrowRight size={16} />
+                  Browse Shop <ArrowRight size={16} />
                 </Link>
                 <Link to="/numerology" className="btn-secondary btn-large">
                   Free Numerology Check
@@ -144,10 +157,11 @@ const Home: React.FC = () => {
 
             {/* Right: Card Stack */}
             <motion.div
+              className="hide-on-mobile"
               initial={{ opacity: 0, y: 32 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.25, ease: 'easeOut' }}
-              style={{ position: 'relative', height: 340, display: 'flex', alignItems: 'center' }}
+              style={{ position: 'relative', height: 340, alignItems: 'center' }}
             >
               {/* Shadow cards */}
               <div style={{
@@ -190,8 +204,8 @@ const Home: React.FC = () => {
                 }}>9</div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span className="badge badge-subtle">PREMIUM</span>
-                  <span className="badge badge-gold">MIRROR NUMBER</span>
+                  <span className="badge badge-subtle">FEATURED</span>
+                  <span className="badge badge-gold">{featuredNumber.category.toUpperCase()}</span>
                 </div>
 
                 <div style={{ position: 'relative' }}>
@@ -202,10 +216,9 @@ const Home: React.FC = () => {
                     letterSpacing: '0.06em',
                     color: 'var(--text-primary)',
                     lineHeight: 1, marginBottom: 14,
-                  }}>90000 09999</div>
+                  }}>{featuredNumber.phone}</div>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <span className="badge badge-subtle">Mars · 9</span>
-                    <span className="badge badge-subtle">Airtel</span>
+                    <span className="badge badge-subtle">{featuredNumber.energy}</span>
                     <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#059669', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600 }}>
                       <span style={{ width: 7, height: 7, background: '#059669', borderRadius: '50%', display: 'inline-block' }} />
                       Available
@@ -216,11 +229,15 @@ const Home: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Price</div>
-                    <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent-gold)', lineHeight: 1 }}>₹59,999</div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent-gold)', lineHeight: 1 }}>{featuredNumber.price}</div>
                   </div>
-                  <Link to="/vip-numbers" className="btn-primary" style={{ height: 40, fontSize: 13 }}>
+                  <button 
+                    onClick={() => addToCart(featuredNumber)} 
+                    className="btn-primary" 
+                    style={{ height: 40, fontSize: 13 }}
+                  >
                     Buy Now
-                  </Link>
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -261,13 +278,13 @@ const Home: React.FC = () => {
           <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-8%' }}>
             <motion.div variants={fadeUp} className="section-header">
               <span className="section-overline">Hand-Picked</span>
-              <h2 className="section-title">Trending VIP Numbers</h2>
+              <h2 className="section-title">Trending Numbers</h2>
               <p className="section-subtitle">Most wanted numbers this week, curated by our numerology expert team.</p>
             </motion.div>
             <NumberGrid />
             <motion.div variants={fadeUp} style={{ display: 'flex', justifyContent: 'center', marginTop: 56 }}>
               <Link to="/vip-numbers" className="btn-secondary btn-large">
-                View All 500+ Numbers <ArrowRight size={16} />
+                Visit the Shop <ArrowRight size={16} />
               </Link>
             </motion.div>
           </motion.div>
@@ -392,7 +409,7 @@ const Home: React.FC = () => {
             </p>
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link to="/vip-numbers" className="btn-primary btn-large">
-                Browse All Numbers <ArrowRight size={18} />
+                Visit Shop <ArrowRight size={18} />
               </Link>
               <a href="https://wa.me/919956591717" target="_blank" rel="noreferrer" className="btn-secondary btn-large">
                 Chat on WhatsApp

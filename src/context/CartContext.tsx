@@ -14,12 +14,15 @@ interface CartContextType {
   removeFromCart: (id: string) => void;
   clearCart: () => void;
   total: number;
+  isCartOpen: boolean;
+  setIsCartOpen: (open: boolean) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('vip_cart');
@@ -31,8 +34,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [items]);
 
   const addToCart = (item: CartItem) => {
-    if (items.find(i => i.id === item.id)) return;
+    if (items.find(i => i.id === item.id)) {
+      setIsCartOpen(true);
+      return;
+    }
     setItems(prev => [...prev, item]);
+    setIsCartOpen(true);
   };
 
   const removeFromCart = (id: string) => {
@@ -47,7 +54,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, total }}>
+    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, total, isCartOpen, setIsCartOpen }}>
       {children}
     </CartContext.Provider>
   );

@@ -3,37 +3,50 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNumbers } from '../context/NumbersContext';
 import type { VIPNumber } from '../context/NumbersContext';
 import { Trash2, PenLine, Plus, X, ToggleLeft, ToggleRight } from 'lucide-react';
-import WhatsAppManager from './WhatsAppManager';
 
 const PLANETS = ['Sun', 'Moon', 'Jupiter', 'Rahu', 'Mercury', 'Venus', 'Ketu', 'Saturn', 'Mars'];
-const OPERATORS = ['Airtel', 'Jio', 'Vi', 'BSNL', 'MTNL'];
-const CATEGORIES = ['VVIP Triple', 'VVIP Rare', 'VVIP Mirror', 'Business', 'Leadership', '786 Lucky', 'Birthday Special', 'Sequential'];
 
 const EMPTY_FORM = {
   phone: '', price: '', numerologyTotal: 1,
-  category: 'VVIP Triple', energy: 'Sun', operator: 'Airtel', available: true,
+  category: '', energy: 'Sun', available: true,
 };
 
 const TABS = [
   { id: 'inventory', label: '📋 VIP Numbers' },
-  { id: 'whatsapp',  label: '📱 WhatsApp' },
   { id: 'orders',    label: '📦 Orders' },
   { id: 'settings',  label: '⚙️ Settings' },
 ];
 
 const AdminPortal: React.FC = () => {
   const [activeTab, setActiveTab] = useState('inventory');
-  const { numbers, addNumber, updateNumber, deleteNumber, refresh: refreshNums } = useNumbers();
+  const { numbers, categories, addNumber, updateNumber, deleteNumber, refresh: refreshNums } = useNumbers();
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<VIPNumber | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [settings, setSettings] = useState({ support_whatsapp: '918090050091' });
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/settings`);
+      if (res.ok) setSettings(await res.json());
+    } catch (e) {}
+  };
+
+  const saveSettings = async () => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+    if (res.ok) alert('Settings saved successfully!');
+  };
 
   const openAddForm = () => { setEditTarget(null); setForm(EMPTY_FORM); setShowForm(true); };
   const openEditForm = (num: VIPNumber) => {
     setEditTarget(num);
-    setForm({ phone: num.phone, price: num.price, numerologyTotal: num.numerologyTotal, category: num.category, energy: num.energy, operator: num.operator, available: num.available });
+    setForm({ phone: num.phone, price: num.price, numerologyTotal: num.numerologyTotal, category: num.category, energy: num.energy, available: num.available });
     setShowForm(true);
   };
   const fetchOrders = async () => {
@@ -46,12 +59,13 @@ const AdminPortal: React.FC = () => {
 
   useEffect(() => { 
     if (activeTab === 'orders') fetchOrders(); 
+    if (activeTab === 'settings') fetchSettings();
   }, [activeTab]);
 
   const handleOrderAction = async (id: string, action: 'approve' | 'reject') => {
     const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/orders/${id}/${action}`, { method: 'POST' });
     if (res.ok) {
-      alert(`Order ${action}d successfully. Message sent to customer.`);
+      alert(`Order ${action}ed successfully.`);
       fetchOrders();
       refreshNums();
     }
@@ -137,7 +151,7 @@ const AdminPortal: React.FC = () => {
               <table>
                 <thead>
                   <tr>
-                    <th>Number</th><th>Category</th><th>Price</th><th>Numerology</th><th>Operator</th><th>Status</th><th>Actions</th>
+                    <th>Number</th><th>Category</th><th>Price</th><th>Numerology</th><th>Status</th><th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,7 +167,6 @@ const AdminPortal: React.FC = () => {
                         <span className="num-chip">No.{num.numerologyTotal}</span>
                         <span className="planet-chip">{num.energy}</span>
                       </td>
-                      <td>{num.operator}</td>
                       <td>
                         <button className={`toggle-btn ${num.available ? 'on' : 'off'}`} onClick={() => toggleAvailability(num)}>
                           {num.available ? <><ToggleRight size={16} /> Live</> : <><ToggleLeft size={16} /> Hidden</>}
@@ -171,22 +184,13 @@ const AdminPortal: React.FC = () => {
           </motion.div>
         )}
 
-        {/* ── WhatsApp Tab ── */}
-        {activeTab === 'whatsapp' && (
-          <motion.div key="whatsapp" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <WhatsAppManager />
-          </motion.div>
-        )}
-
-
-
         {/* ── Orders Tab ── */}
         {activeTab === 'orders' && (
           <motion.div key="orders" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="table-wrap">
               <table>
                 <thead>
-                  <tr><th>Order ID</th><th>Number</th><th>Price</th><th>WhatsApp</th><th>Status</th></tr>
+                  <tr><th>Order ID</th><th>Number</th><th>Price</th><th>Phone</th><th>Status</th></tr>
                 </thead>
                 <tbody>
                   {loadingOrders ? (
@@ -198,18 +202,11 @@ const AdminPortal: React.FC = () => {
                       <td><div style={{ fontSize: '0.75rem', opacity: 0.6 }}>{ord.id.slice(0,8)}...</div></td>
                       <td className="td-phone">{ord.vip_numbers?.phone || 'Loading...'}</td>
                       <td className="td-price">{ord.amount || ord.vip_numbers?.price}</td>
-                      <td>{ord.customer_wa.split('@')[0]}</td>
+                      <td>{ord.customer_phone}</td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                           <span className={`badge ${ord.status}`}>{ord.status.replace(/_/g, ' ')}</span>
                           
-                          {ord.screenshot_url && (
-                             <button className="btn-outline" onClick={() => {
-                               const win = window.open();
-                               win?.document.write(`<img src="${ord.screenshot_url}" style="max-width:100%"/>`);
-                             }} style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>🖼️ View Proof</button>
-                          )}
-
                           {ord.status === 'awaiting_reconciliation' && (
                             <div style={{ display: 'flex', gap: '0.4rem' }}>
                               <button className="btn-primary" onClick={() => handleOrderAction(ord.id, 'approve')} style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', background: '#059669' }}>Verify</button>
@@ -232,10 +229,14 @@ const AdminPortal: React.FC = () => {
             <div className="settings-card">
               <h3>Site Configuration</h3>
               <div className="settings-form">
+                <div className="field-group">
+                   <label>Support WhatsApp Number</label>
+                   <input type="text" value={settings.support_whatsapp} onChange={e => setSettings(s => ({ ...s, support_whatsapp: e.target.value }))} placeholder="91XXXXXXXXXX (Include Country Code)" />
+                   <p style={{ fontSize: 11, color: '#888' }}>This number will be used for all "Chat on WhatsApp" buttons.</p>
+                </div>
                 <div className="field-group"><label>Brand Name</label><input type="text" defaultValue="VIPNumberWala" /></div>
                 <div className="field-group"><label>UPI ID</label><input type="text" defaultValue="vipnumberwala@upi" /></div>
-                <div className="field-group"><label>Hero Tagline</label><textarea rows={3} defaultValue="India's Most Trusted VIP Numbers Destination." /></div>
-                <button className="btn-primary">Save Changes</button>
+                <button className="btn-primary" onClick={saveSettings}>Save Changes</button>
               </div>
             </div>
           </motion.div>
@@ -306,16 +307,17 @@ const AdminPortal: React.FC = () => {
                 </div>
                 <div className="form-row">
                   <div className="field-group">
-                    <label>Category</label>
-                    <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                      {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div className="field-group">
-                    <label>Operator</label>
-                    <select value={form.operator} onChange={e => setForm(f => ({ ...f, operator: e.target.value }))}>
-                      {OPERATORS.map(o => <option key={o}>{o}</option>)}
-                    </select>
+                    <label>Category (Type or Select)</label>
+                    <input 
+                      list="category-list"
+                      placeholder="e.g. VVIP Triple"
+                      value={form.category} 
+                      onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                      required
+                    />
+                    <datalist id="category-list">
+                      {categories.map(c => <option key={c} value={c} />)}
+                    </datalist>
                   </div>
                 </div>
                 <div className="field-group">
@@ -341,26 +343,37 @@ const AdminPortal: React.FC = () => {
       </AnimatePresence>
 
       <style>{`
-        .admin-container { display: flex; min-height: 100vh; background: #f8f7f4; font-family: var(--font-sans); }
+        .admin-container { display: flex; flex-direction: column; min-height: 100vh; background: #f8f7f4; font-family: var(--font-sans); }
+        @media (min-width: 768px) { .admin-container { flex-direction: row; } }
 
-        .admin-sidebar { width: 220px; flex-shrink: 0; background: #1a1713; color: #fff; padding: 2rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .admin-sidebar { width: 100%; flex-shrink: 0; background: #1a1713; color: #fff; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        @media (min-width: 768px) { .admin-sidebar { width: 220px; padding: 2rem 1.25rem; justify-content: space-between; } }
+        
         .admin-logo { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.25rem; }
         .admin-logo span { color: var(--accent-color); }
-        .admin-tagline { font-size: 0.72rem; opacity: 0.45; margin-bottom: 2rem; }
-        .nav-links { display: flex; flex-direction: column; gap: 0.4rem; }
+        .admin-tagline { font-size: 0.72rem; opacity: 0.45; margin-bottom: 1rem; }
+        @media (min-width: 768px) { .admin-tagline { margin-bottom: 2rem; } }
+        
+        .nav-links { display: flex; flex-direction: row; flex-wrap: wrap; gap: 0.4rem; }
+        @media (min-width: 768px) { .nav-links { flex-direction: column; } }
+        
         .nav-btn { text-align: left; padding: 0.7rem 1rem; border-radius: var(--radius-sm); font-size: 0.88rem; color: rgba(255,255,255,0.55); transition: var(--transition-smooth); background: transparent; }
         .nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
         .nav-btn.active { background: var(--accent-color); color: white; }
-        .preview-link { font-size: 0.78rem; opacity: 0.45; padding: 0.4rem 1rem; display: block; transition: opacity 0.2s; }
+        .preview-link { font-size: 0.78rem; opacity: 0.45; padding: 0.4rem 1rem; display: inline-block; transition: opacity 0.2s; }
         .preview-link:hover { opacity: 1; color: var(--accent-color); }
 
-        .admin-main { flex: 1; padding: 2.5rem 3rem; overflow-x: auto; }
-        .admin-topbar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+        .admin-main { flex: 1; padding: 1.5rem; width: 100%; overflow-x: hidden; }
+        @media (min-width: 768px) { .admin-main { padding: 2.5rem 3rem; } }
+        
+        .admin-topbar { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+        @media (min-width: 640px) { .admin-topbar { flex-direction: row; justify-content: space-between; align-items: flex-start; } }
+        
         .admin-topbar h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
         .admin-sub { font-size: 0.82rem; color: #999; }
         .add-btn { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; white-space: nowrap; }
 
-        .table-wrap { background: white; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); }
+        .table-wrap { background: white; border-radius: var(--radius-md); overflow-x: auto; box-shadow: var(--shadow-sm); width: 100%; }
         table { width: 100%; border-collapse: collapse; }
         thead { background: #f8f7f4; }
         th { padding: 0.85rem 1.25rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600; }

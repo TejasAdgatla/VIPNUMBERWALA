@@ -13,11 +13,10 @@ interface LayoutProps { children: React.ReactNode; }
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [scrolled, setScrolled]     = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { items } = useCart();
+  const { items, isCartOpen, setIsCartOpen } = useCart();
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -36,7 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const NAV_LINKS = [
     { to: '/',           label: 'Home'             },
-    { to: '/vip-numbers',label: 'VIP Numbers'      },
+    { to: '/vip-numbers',label: 'Shop'             },
     { to: '/numerology', label: 'Numerology'        },
   ];
 
@@ -51,7 +50,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="nav-content">
 
           <Link to="/" className="logo">
-            <div className="logo-mark">V</div>
             <span className="logo-text">VIP<span>Number</span>Wala</span>
           </Link>
 
@@ -68,41 +66,45 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             ))}
           </div>
 
-          <div className="desktop-cta" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            {/* Cart Icon */}
-            <button onClick={() => setIsCartOpen(true)} style={{ position: 'relative', color: 'var(--text-primary)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+          <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            
+            {/* Desktop Auth (Hidden on small screens) */}
+            <div className="desktop-auth">
+              {user ? (
+                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Link to="/profile" style={{ textAlign: 'right', textDecoration: 'none', color: 'inherit', transition: 'opacity 0.2s' }} className="hover-opacity">
+                       <div style={{ fontSize: 10, color: 'var(--accent-gold)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{user.is_admin ? 'Admin' : 'Personal'}</div>
+                       <div style={{ fontSize: 13, fontWeight: 700 }}>{user.phone}</div>
+                    </Link>
+                    <button onClick={logout} style={{ color: 'var(--text-tertiary)', padding: 8, background: 'none', border: 'none', cursor: 'pointer' }} title="Logout"><LogOut size={18} /></button>
+                 </div>
+              ) : (
+                 <button onClick={() => setIsAuthOpen(true)} className="btn-secondary" style={{ height: '40px', fontSize: '12.5px' }}>
+                    <UserIcon size={16} />
+                    Login / Join
+                 </button>
+              )}
+            </div>
+
+            {/* Cart Icon (Always Visible) */}
+            <button onClick={() => setIsCartOpen(true)} style={{ position: 'relative', color: 'var(--text-primary)', background: 'none', border: 'none', padding: 8, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                <ShoppingCart size={22} />
                {items.length > 0 && (
-                 <span style={{ position: 'absolute', top: -8, right: -10, background: 'var(--accent-gold)', color: 'white', fontSize: 10, fontWeight: 800, width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <span style={{ position: 'absolute', top: 0, right: 0, background: 'var(--accent-gold)', color: 'white', fontSize: 10, fontWeight: 800, width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {items.length}
                  </span>
                )}
             </button>
 
-            {/* Auth Button */}
-            {user ? (
-               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ textAlign: 'right' }}>
-                     <div style={{ fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>{user.is_admin ? 'Admin' : 'Personal'}</div>
-                     <div style={{ fontSize: 13, fontWeight: 700 }}>{user.phone}</div>
-                  </div>
-                  <button onClick={logout} style={{ color: 'var(--text-tertiary)', padding: 8 }} title="Logout"><LogOut size={18} /></button>
-               </div>
-            ) : (
-               <button onClick={() => setIsAuthOpen(true)} className="btn-secondary" style={{ height: '40px', fontSize: '12.5px' }}>
-                  <UserIcon size={16} />
-                  Login / Join
-               </button>
-            )}
+            {/* Mobile Menu Toggle (Always Visible on Mobile) */}
+            <button
+              className="mobile-menu-btn"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
-
-          <button
-            className="mobile-menu-btn"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
         </div>
       </nav>
 
@@ -116,12 +118,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             transition={{ type: 'spring', stiffness: 300, damping: 32 }}
           >
             <button onClick={() => setIsMenuOpen(false)} style={{ position: 'absolute', top: 24, right: 24, padding: 8, color: 'var(--text-primary)' }}><X size={24} /></button>
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', gap: 32, padding: 40 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', gap: 32, padding: '40px 0' }}>
               {NAV_LINKS.map((link) => (
-                <NavLink key={link.to} to={link.to} end style={{ fontSize: 28, fontWeight: 700 }}>{link.label}</NavLink>
+                <NavLink key={link.to} to={link.to} end onClick={() => setIsMenuOpen(false)} style={{ fontSize: 28, fontWeight: 700 }}>{link.label}</NavLink>
               ))}
               {!user && <button onClick={() => { setIsMenuOpen(false); setIsAuthOpen(true); }} className="btn-primary" style={{ fontSize: 20 }}>Login / Signup</button>}
             </div>
+            
+            {user && (
+              <div style={{ marginTop: 'auto', paddingBottom: 20 }}>
+                <Link to="/profile" onClick={() => setIsMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#FFF', padding: '16px 20px', borderRadius: 20, border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)', textDecoration: 'none' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--bg-deep)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-gold)', flexShrink: 0 }}>
+                     <UserIcon size={24} />
+                  </div>
+                  <div style={{ flex: 1, overflow: 'hidden' }}>
+                     <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+                       {user.is_admin ? 'Admin Vault' : 'My Vault'}
+                     </div>
+                     <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.phone}</div>
+                  </div>
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); logout(); setIsMenuOpen(false); }} style={{ padding: 12, color: 'var(--text-tertiary)', background: 'rgba(0,0,0,0.04)', borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex' }}>
+                    <LogOut size={20} />
+                  </button>
+                </Link>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

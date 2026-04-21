@@ -7,9 +7,8 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (phone: string, otp: string) => Promise<boolean>;
-  loginAdmin: (password: string) => Promise<boolean>;
-  requestOTP: (phone: string) => Promise<any>;
+  login: (phone: string, password: string) => Promise<boolean>;
+  register: (phone: string, password: string) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
 }
@@ -29,41 +28,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  const requestOTP = async (phone: string) => {
+  const register = async (phone: string, password: string) => {
     try {
-      const res = await fetch(`${API}/auth/request-otp`, {
+      const res = await fetch(`${API}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-      });
-      if (res.ok) return await res.json();
-      return null;
-    } catch {
-      return null;
-    }
-  };
-
-  const loginAdmin = async (password: string) => {
-    const secret = import.meta.env.VITE_ADMIN_PASSWORD;
-    if (password === secret) {
-      const newUser = { phone: 'ADMIN_SESSION', is_admin: true };
-      setUser(newUser);
-      localStorage.setItem('vip_user', JSON.stringify(newUser));
-      return true;
-    }
-    return false;
-  };
-
-  const login = async (phone: string, otp: string) => {
-    try {
-      const res = await fetch(`${API}/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp })
+        body: JSON.stringify({ phone, password })
       });
       if (res.ok) {
         const data = await res.json();
-        const newUser = { phone: data.phone, is_admin: data.is_admin };
+        const newUser = { phone: data.user.phone, is_admin: data.user.role === 'admin' };
+        setUser(newUser);
+        localStorage.setItem('vip_user', JSON.stringify(newUser));
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const login = async (phone: string, password: string) => {
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newUser = { phone: data.user.phone, is_admin: data.user.is_admin };
         setUser(newUser);
         localStorage.setItem('vip_user', JSON.stringify(newUser));
         return true;
@@ -80,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, loginAdmin, requestOTP, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -285,7 +285,7 @@ input, select, textarea { font-family: var(--font-body); }
 }
 .logo-text {
   font-family: var(--font-display);
-  font-size: 21px;
+  font-size: clamp(16px, 4.5vw, 21px);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -308,8 +308,8 @@ input, select, textarea { font-family: var(--font-body); }
 .desktop-links a:hover   { color: var(--text-primary); background: rgba(0,0,0,0.05); }
 .desktop-links a.active  { color: var(--accent-gold); background: rgba(180,135,15,0.08); }
 
-.desktop-cta { display: none; }
-@media (min-width: 1024px) { .desktop-cta { display: block; } }
+.desktop-auth { display: none; }
+@media (min-width: 1024px) { .desktop-auth { display: block; } }
 
 /* Mobile menu button */
 .mobile-menu-btn {
@@ -400,6 +400,11 @@ input, select, textarea { font-family: var(--font-body); }
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.hide-on-mobile { display: none !important; }
+@media (min-width: 1024px) {
+  .hide-on-mobile { display: flex !important; }
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────────── */

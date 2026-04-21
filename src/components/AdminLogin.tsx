@@ -4,13 +4,13 @@ import { Lock, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const AdminLogin: React.FC = () => {
-  const { loginAdmin } = useAuth();
+  const { login } = useAuth();
   const [pass, setPass] = useState('');
   const [error, setError] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await loginAdmin(pass);
+    const success = await login('8090050091', pass);
     if (!success) {
       setError(true);
       setTimeout(() => setError(false), 2000);

@@ -9,35 +9,25 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { requestOTP, login } = useAuth();
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const { login, register } = useAuth();
+  const [mode, setMode] = useState<'login' | 'register'>('login');
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [fallbackOtp, setFallbackOtp] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleRequest = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const data = await requestOTP(phone);
-    setLoading(false);
-    if (data && data.success) {
-      if (data.otp) setFallbackOtp(data.otp);
-      setStep('otp');
-    }
-    else setError('Failed to send OTP. Try again.');
-  };
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    const success = await login(phone, otp);
+    
+    const success = mode === 'login' 
+      ? await login(phone, password)
+      : await register(phone, password);
+      
     setLoading(false);
     if (success) onClose();
-    else setError('Invalid OTP. Please check and try again.');
+    else setError(mode === 'login' ? 'Invalid credentials' : 'User already exists or signup failed');
   };
 
   return (
@@ -54,44 +44,38 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
                <div style={{ width: 64, height: 64, borderRadius: 20, background: 'var(--bg-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'var(--accent-gold)' }}>
-                  {step === 'phone' ? <Phone size={28} /> : <Lock size={28} />}
+                  <Lock size={28} />
                </div>
-               <h2 className="text-display-lg" style={{ fontSize: '1.5rem' }}>{step === 'phone' ? 'Welcome Back' : 'Verify Identity'}</h2>
-               <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8 }}>{step === 'phone' ? 'Login with your phone to access your account' : `Enter the 6-digit code sent to ${phone}`}</p>
+               <h2 className="text-display-lg" style={{ fontSize: '1.5rem' }}>{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
+               <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8 }}>
+                 {mode === 'login' ? 'Enter your details to access your account' : 'Register to start purchasing VIP numbers'}
+               </p>
             </div>
 
-            <form onSubmit={step === 'phone' ? handleRequest : handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-               {step === 'phone' ? (
-                 <div className="input-group">
-                    <label className="text-label" style={{ marginBottom: 8, display: 'block' }}>Phone Number</label>
-                    <input className="input-field" placeholder="91XXXXXXXX" value={phone} onChange={e => setPhone(e.target.value)} required />
-                 </div>
-               ) : (
-                 <div className="input-group">
-                    <label className="text-label" style={{ marginBottom: 8, display: 'block' }}>One-Time Password</label>
-                    <input className="input-field" placeholder="000000" value={otp} onChange={e => setOtp(e.target.value)} required maxLength={6} style={{ textAlign: 'center', fontSize: 24, letterSpacing: 8, fontWeight: 700 }} />
-                 </div>
-               )}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+               <div className="input-group">
+                  <label className="text-label" style={{ marginBottom: 8, display: 'block' }}>Phone Number</label>
+                  <input className="input-field" placeholder="91XXXXXXXX" value={phone} onChange={e => setPhone(e.target.value)} required />
+               </div>
 
-               {step === 'otp' && fallbackOtp && (
-                 <div style={{ background: 'rgba(5, 150, 105, 0.1)', border: '1px solid #10b981', color: '#059669', padding: '12px 16px', borderRadius: 12, marginBottom: 20, textAlign: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Development Sandbox OTP</span>
-                    <strong style={{ fontSize: 18, letterSpacing: 4 }}>{fallbackOtp}</strong>
-                 </div>
-               )}
+               <div className="input-group">
+                  <label className="text-label" style={{ marginBottom: 8, display: 'block' }}>Password</label>
+                  <input className="input-field" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+               </div>
 
                {error && <p style={{ color: '#DC2626', fontSize: 13, textAlign: 'center', margin: 0 }}>{error}</p>}
 
                <button type="submit" disabled={loading} className="btn-primary btn-large" style={{ width: '100%' }}>
-                  {loading ? <Loader2 className="animate-spin" /> : (step === 'phone' ? 'Get OTP' : 'Verify & Login')}
+                  {loading ? <Loader2 className="animate-spin" /> : (mode === 'login' ? 'Login' : 'Signup')}
                   {!loading && <ArrowRight size={18} style={{ marginLeft: 8 }} />}
                </button>
             </form>
 
-            <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-tertiary)', marginTop: 24 }}>
-               {step === 'otp' ? (
-                 <button onClick={() => setStep('phone')} style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>Change Number</button>
-               ) : 'OTP will be delivered via WhatsApp'}
+            <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-tertiary)', marginTop: 24 }}>
+               {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
+               <button onClick={() => setMode(mode === 'login' ? 'register' : 'login')} style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>
+                 {mode === 'login' ? 'Signup Now' : 'Login Now'}
+               </button>
             </p>
           </motion.div>
         </div>

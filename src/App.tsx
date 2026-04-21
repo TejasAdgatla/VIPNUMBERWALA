@@ -5,6 +5,7 @@ import VIPNumbersPage from './pages/VIPNumbersPage';
 import NumerologyPage from './pages/NumerologyPage';
 import CheckoutPage from './pages/CheckoutPage';
 import CheckoutStatusPage from './pages/CheckoutStatusPage';
+import ProfilePage from './pages/ProfilePage';
 import AdminPortal from './components/AdminPortal';
 import AdminLogin from './components/AdminLogin';
 import { NumbersProvider } from './context/NumbersContext';
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/vip-numbers" element={<VIPNumbersPage />} />
                 <Route path="/numerology" element={<NumerologyPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/checkout/status" element={<CheckoutStatusPage />} />
                 <Route path="/central-vault" element={<AdminRoute />} />

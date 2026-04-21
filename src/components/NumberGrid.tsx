@@ -16,22 +16,49 @@ const PLANET_DATA: Record<number, { name: string, color: string }> = {
   9: { name: 'Mars',    color: '#DC2626' },
 };
 
-const NumberGrid: React.FC = () => {
+interface FilterState {
+  category: string;
+  numerology: string;
+}
+
+interface NumberGridProps {
+  searchQuery?: string;
+  filters?: FilterState;
+}
+
+const NumberGrid: React.FC<NumberGridProps> = ({ searchQuery = '', filters }) => {
   const { numbers } = useNumbers();
   const { addToCart, items } = useCart();
-  const visibleNumbers = numbers.filter(n => n.available);
+  
+  const filteredNumbers = numbers.filter(n => {
+    if (!n.available) return false;
+    
+    // Search filter
+    if (searchQuery && !n.phone.replace(/\s/g, '').includes(searchQuery.replace(/\s/g, ''))) {
+      return false;
+    }
+    
+    // Category filter
+    if (filters?.category && n.category !== filters.category) return false;
+    
+    // Numerology filter
+    if (filters?.numerology && String(n.numerologyTotal) !== filters.numerology) return false;
+    
+    return true;
+  });
 
-  if (visibleNumbers.length === 0) {
+  if (filteredNumbers.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--text-secondary)' }}>
-        <p>No numbers available right now. Check back soon!</p>
+      <div style={{ textAlign: 'center', padding: '100px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: 32, border: '1px dashed var(--border-subtle)' }}>
+        <p style={{ color: 'var(--text-tertiary)', fontSize: 18 }}>No magic numbers match your current criteria.</p>
+        <button onClick={() => window.location.reload()} style={{ marginTop: 16, color: 'var(--accent-gold)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all filters</button>
       </div>
     );
   }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: 20 }}>
-      {visibleNumbers.map((num, i) => (
+      {filteredNumbers.map((num, i) => (
         <motion.div
           key={num.id}
           initial={{ opacity: 0, y: 20 }}
@@ -51,7 +78,7 @@ const NumberGrid: React.FC = () => {
 };
 
 interface NumCardProps {
-  num: { phone: string; price: string; category: string; energy: string; operator: string; numerologyTotal: number; };
+  num: { phone: string; price: string; category: string; energy: string; numerologyTotal: number; };
   inCart: boolean;
   onAdd: () => void;
 }
@@ -100,8 +127,7 @@ const NumberCard: React.FC<NumCardProps> = ({ num, inCart, onAdd }) => {
         transition: 'color 0.3s ease',
       }}>{num.numerologyTotal}</div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
-        <span className="badge" style={{ background: 'rgba(0,0,0,0.04)' }}>{num.operator}</span>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', position: 'relative' }}>
         <span className="badge" style={{ color: 'var(--accent-gold)', background: 'rgba(180,135,15,0.08)' }}>{num.category}</span>
       </div>
 

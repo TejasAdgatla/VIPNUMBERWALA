@@ -229,16 +229,16 @@ const NumerologyPage: React.FC = () => {
             </motion.div>
           )}
 
-          {mode && step === 1 && (
+            {mode && step === 1 && (
             <motion.div key="form" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-              style={{ background: '#FFF', padding: 48, borderRadius: 24, boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-subtle)' }}
+              style={{ background: '#FFF', padding: 'clamp(24px, 5vw, 48px)', borderRadius: 24, boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-subtle)' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 40 }}>
                 <h2 className="text-display-lg" style={{ fontSize: '1.75rem', margin: 0 }}>{mode === 'find' ? 'Elite Matching' : 'Full Alignment Audit'}</h2>
                 <button onClick={reset} style={{ color: 'var(--text-tertiary)', fontSize: 12, fontWeight: 700 }}>Back</button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 24 }}>
                 <InputWrapper label="Full Name" icon={<User />}>
                   <input className="input-field" placeholder="Rahul Sharma" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                 </InputWrapper>
@@ -284,13 +284,13 @@ const NumerologyPage: React.FC = () => {
             <motion.div key="res" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
                {mode === 'audit' ? (
                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 24, background: '#FFF', padding: 48, borderRadius: 28, border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)' }}>
-                       <div style={{ textAlign: 'center', borderRight: '1px solid var(--border-subtle)', paddingRight: 40 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, background: '#FFF', padding: 'clamp(24px, 5vw, 48px)', borderRadius: 28, border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)' }}>
+                       <div style={{ flex: '1 1 200px', textAlign: 'center', borderRight: '1px solid var(--border-subtle)', paddingRight: 20 }}>
                           <span className="text-label" style={{ marginBottom: 12, display: 'block' }}>Chaldean Score</span>
                           <div style={{ fontSize: 84, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--accent-gold)', lineHeight: 1 }}>{results.finalScore}</div>
                           <div className="badge badge-gold" style={{ marginTop: 20 }}>{results.verdict}</div>
                        </div>
-                       <div>
+                       <div style={{ flex: '2 1 300px' }}>
                           <h3 className="text-display-lg" style={{ fontSize: '1.8rem', marginBottom: 20 }}>Audit Result</h3>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                              <MiniInfo label="Core Planet" val={`${results.corePlanet.name} (№ ${results.coreVibe})`} />
@@ -306,7 +306,7 @@ const NumerologyPage: React.FC = () => {
                        </div>
                        <div style={{ padding: '8px 0' }}>
                           {results.interpretations.map((item: any, i: number) => (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 32px', borderBottom: i === results.interpretations.length -1 ? 'none' : '1px solid rgba(0,0,0,0.03)' }}>
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, padding: '16px clamp(16px, 4vw, 32px)', borderBottom: i === results.interpretations.length -1 ? 'none' : '1px solid rgba(0,0,0,0.03)' }}>
                                <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                                   <div style={{ width: 44, height: 44, borderRadius: 12, border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{item.pair}</div>
                                   <div>
@@ -339,7 +339,7 @@ const NumerologyPage: React.FC = () => {
 
                    <h3 className="text-display-lg" style={{ fontSize: '1.5rem' }}>Top Resonating Numbers</h3>
                    
-                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 24 }}>
+                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: 24 }}>
                       {results.suggestions.map((num: any, i: number) => (
                         <div key={i} style={{ background: '#FFF', borderRadius: 24, padding: 32, border: num.resonance > 0 ? '1.5px solid var(--accent-gold)' : '1px solid var(--border-subtle)', position: 'relative' }}>
                            {num.resonance > 0 && <div style={{ position: 'absolute', top: 16, right: 16 }}><Star size={20} fill="var(--accent-gold)" color="var(--accent-gold)" /></div>}

@@ -8,7 +8,6 @@ create table if not exists vip_numbers (
   numerology_total integer not null default 1,
   category    text not null default 'VVIP',
   energy      text not null default 'Sun',
-  operator    text not null default 'Airtel',
   available   boolean not null default true,
   created_at  timestamptz not null default now()
 );

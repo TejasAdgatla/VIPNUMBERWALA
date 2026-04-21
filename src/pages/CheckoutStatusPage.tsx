@@ -10,10 +10,19 @@ const CheckoutStatusPage: React.FC = () => {
   const { clearCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<'SUCCESS' | 'FAILED' | 'PENDING' | 'PAID' | null>(null);
+  const [supportWA, setSupportWA] = useState('918090050091');
   
   const orderId = searchParams.get('order_id');
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/settings`);
+        const data = await res.json();
+        if (data.support_whatsapp) setSupportWA(data.support_whatsapp);
+      } catch (e) {}
+    };
+
     const verifyPayment = async () => {
       if (!orderId) {
         navigate('/');
@@ -36,6 +45,7 @@ const CheckoutStatusPage: React.FC = () => {
       }
     };
 
+    fetchSettings();
     verifyPayment();
   }, [orderId, navigate, clearCart]);
 
@@ -60,11 +70,11 @@ const CheckoutStatusPage: React.FC = () => {
             </div>
             <h1 className="text-display-md" style={{ marginBottom: 16 }}>Payment Confirmed!</h1>
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 32 }}>
-               Your premium numbers are now reserved. Our team will contact you on WhatsApp to proceed with the activation.
+               Your premium numbers are now reserved. Click the button below to message us on WhatsApp and provide your order details for activation.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-               <a href="https://wa.me/919956591717" className="btn-primary" style={{ background: '#25D366' }}>
-                  <MessageSquare size={18} /> Chat with Support
+               <a href={`https://wa.me/${supportWA.replace(/\D/g, '')}?text=Hi, I just purchased number(s) on VIPNumberWala. My Order ID is ${orderId}. Please guide me on activation.`} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ background: '#25D366' }}>
+                  <MessageSquare size={18} /> Message on WhatsApp
                </a>
                <button onClick={() => navigate('/')} className="btn-outline">Back to Home</button>
             </div>

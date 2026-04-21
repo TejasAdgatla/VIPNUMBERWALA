@@ -7,7 +7,6 @@ export interface VIPNumber {
   numerologyTotal: number;
   category: string;
   energy: string;
-  operator: string;
   available: boolean;
 }
 
@@ -22,7 +21,6 @@ function mapFromAPI(n: Record<string, any>): VIPNumber {
     numerologyTotal: Number(n.numerology_total ?? 1),
     category: String(n.category),
     energy: String(n.energy),
-    operator: String(n.operator),
     available: Boolean(n.available),
   };
 }
@@ -34,13 +32,13 @@ function mapToAPI(n: Partial<VIPNumber>) {
     numerology_total: n.numerologyTotal,
     category: n.category,
     energy: n.energy,
-    operator: n.operator,
     available: n.available,
   };
 }
 
 interface NumbersContextType {
   numbers: VIPNumber[];
+  categories: string[];
   loading: boolean;
   addNumber: (n: Omit<VIPNumber, 'id'>) => Promise<void>;
   updateNumber: (n: VIPNumber) => Promise<void>;
@@ -53,6 +51,11 @@ const NumbersContext = createContext<NumbersContextType | null>(null);
 export const NumbersProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [numbers, setNumbers] = useState<VIPNumber[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const categories = React.useMemo(() => {
+    const list = numbers.map(n => n.category).filter(Boolean);
+    return Array.from(new Set(list)).sort();
+  }, [numbers]);
 
   const fetchFromAPI = useCallback(async (): Promise<VIPNumber[] | null> => {
     try {
@@ -101,7 +104,7 @@ export const NumbersProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <NumbersContext.Provider value={{ numbers, loading, addNumber, updateNumber, deleteNumber, refresh }}>
+    <NumbersContext.Provider value={{ numbers, categories, loading, addNumber, updateNumber, deleteNumber, refresh }}>
       {children}
     </NumbersContext.Provider>
   );
