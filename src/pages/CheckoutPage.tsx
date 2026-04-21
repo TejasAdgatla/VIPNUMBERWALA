@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, CheckCircle2, ShoppingBag, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
+import { CheckCircle2, ShoppingBag, ShieldCheck, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
