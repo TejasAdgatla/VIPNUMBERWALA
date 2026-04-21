@@ -144,7 +144,7 @@ const NumberCard: React.FC<NumCardProps> = ({ num, inCart, onAdd }) => {
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: planetColor }} />
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-secondary)', fontWeight: 500 }}>{planet.name}</span>
           </div>
-          <span className="badge" style={{ background: 'rgba(0,0,0,0.04)' }}>Chaldean № {num.numerologyTotal}</span>
+          <span className="badge" style={{ background: 'rgba(0,0,0,0.04)' }}>Chaldean No. {num.numerologyTotal}</span>
         </div>
       </div>
 
