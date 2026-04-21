@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User as UserIcon, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Chatbot from './Chatbot';
+
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import AuthModal from './AuthModal';
@@ -179,7 +179,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </footer>
 
-      <Chatbot />
+
     </div>
   );
 };
