@@ -45,14 +45,14 @@ const ProfilePage: React.FC = () => {
   if (loading) return <div style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading your vault...</div>;
 
   return (
-    <div className="container" style={{ padding: '80px 20px' }}>
+    <div className="container" style={{ padding: 'clamp(40px, 10vw, 80px) 20px' }}>
       <header style={{ marginBottom: 40 }}>
-         <h1 className="text-display-md" style={{ marginBottom: 8 }}>Your Vault</h1>
+         <h1 className="text-display-md" style={{ marginBottom: 8, fontSize: 'clamp(1.75rem, 5vw, 2.5rem)' }}>Your Vault</h1>
          <p style={{ color: 'var(--text-secondary)' }}>Manage your premium numbers and track your requests</p>
       </header>
 
       {orders.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '100px 20px', background: 'var(--bg-deep)', borderRadius: 24 }}>
+        <div style={{ textAlign: 'center', padding: 'clamp(60px, 15vw, 100px) 20px', background: 'var(--bg-deep)', borderRadius: 24, border: '1px solid var(--border-subtle)' }}>
            <ShoppingBag size={48} style={{ color: 'var(--text-tertiary)', marginBottom: 16 }} />
            <h3>No numbers purchased yet</h3>
            <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>Your premium destiny is waiting for you.</p>
@@ -65,10 +65,10 @@ const ProfilePage: React.FC = () => {
               key={order.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              style={{ background: '#FFF', borderRadius: 24, padding: 24, border: '1px solid var(--border-subtle)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24, justifyContent: 'space-between' }}
+              style={{ background: '#FFF', borderRadius: 24, padding: 'clamp(20px, 4vw, 28px)', border: '1px solid var(--border-subtle)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                 <div style={{ width: 64, height: 64, background: 'var(--accent-emerald)', color: 'white', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flex: '1 1 250px' }}>
+                 <div style={{ width: 56, height: 56, background: 'var(--accent-emerald)', color: 'white', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <CreditCard size={24} />
                  </div>
                  <div>
