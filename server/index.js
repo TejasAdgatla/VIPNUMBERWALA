@@ -118,7 +118,7 @@ const CF_CONFIG = {
 };
 
 app.post('/payments/create-order', async (req, res) => {
-  const { amount, customer_phone } = req.body;
+  const { amount, customer_phone, items, milestoneIndex, totalMilestones } = req.body;
   try {
     const phoneStr = String(customer_phone || '').replace(/\D/g, '');
     const amountNum = Number(amount);
@@ -126,7 +126,9 @@ app.post('/payments/create-order', async (req, res) => {
     if (!phoneStr) return res.status(400).json({ error: 'Valid customer phone is required' });
     if (!amountNum || amountNum < 1) return res.status(400).json({ error: 'Valid amount is required' });
     
-    const orderId = `order_${Date.now()}`;
+    // Check for existing partial order for these items (if logic allows)
+    // For simplicity, we just create a new session for the requested amount
+    const orderId = `order_${phoneStr.slice(-4)}_${Date.now()}`;
     const response = await axios.post(`${CF_CONFIG.baseUrl}/orders`, {
       order_id: orderId,
       order_amount: amountNum,
@@ -138,6 +140,13 @@ app.post('/payments/create-order', async (req, res) => {
       },
       order_meta: {
         return_url: (process.env.CASHFREE_RETURN_URL || 'http://localhost:5173/checkout/status?order_id={order_id}').replace('{order_id}', orderId)
+      },
+      order_tags: {
+        customer_phone: phoneStr,
+        items: items.join(','),
+        milestone: String(milestoneIndex || 1),
+        total_milestones: String(totalMilestones || 1),
+        is_installment: String((totalMilestones || 1) > 1)
       }
     }, {
       headers: {
@@ -153,12 +162,7 @@ app.post('/payments/create-order', async (req, res) => {
     console.error('Cashfree API Error:', errorData);
     res.status(500).json({ 
       error: 'Payment initialization failed', 
-      details: errorData,
-      debug: {
-        has_client_id: !!CF_CONFIG.clientId,
-        has_client_secret: !!CF_CONFIG.clientSecret,
-        base_url: CF_CONFIG.baseUrl
-      }
+      details: errorData
     });
   }
 });
@@ -186,8 +190,49 @@ app.get('/payments/verify/:orderId', async (req, res) => {
         'x-client-secret': CF_CONFIG.clientSecret
       }
     });
-    res.json(response.data);
+
+    const cfOrder = response.data;
+    
+    // If PAID, update Database
+    if ((cfOrder.order_status === 'PAID' || cfOrder.order_status === 'SUCCESS') && hasSupabase) {
+      const { items, milestone, total_milestones, customer_phone } = cfOrder.order_tags || {};
+      const itemIds = (items || '').split(',').filter(Boolean);
+      
+      for (const numberId of itemIds) {
+        // Try to find existing order for this number and user
+        const { data: existing } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('number_id', numberId)
+          .eq('customer_phone', customer_phone)
+          .single();
+
+        if (existing) {
+          // Update existing order installments
+          await supabase.from('orders').update({
+            paid_milestones: parseInt(milestone),
+            paid_amount: parseFloat(existing.paid_amount || 0) + cfOrder.order_amount,
+            status: parseInt(milestone) >= parseInt(total_milestones) ? 'completed' : 'partial'
+          }).eq('id', existing.id);
+        } else {
+          // Create new record
+          await supabase.from('orders').insert([{
+            number_id: numberId,
+            customer_phone: customer_phone,
+            customer_wa: customer_phone, // Sync both for legacy
+            total_amount: cfOrder.order_amount * parseInt(total_milestones),
+            paid_amount: cfOrder.order_amount,
+            total_milestones: parseInt(total_milestones),
+            paid_milestones: parseInt(milestone),
+            status: parseInt(total_milestones) === 1 ? 'completed' : 'partial'
+          }]);
+        }
+      }
+    }
+
+    res.json(cfOrder);
   } catch (error) {
+    console.error('Verify error:', error.message);
     res.status(500).json({ error: 'Verification failed' });
   }
 });

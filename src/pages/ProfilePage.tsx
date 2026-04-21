@@ -60,50 +60,100 @@ const ProfilePage: React.FC = () => {
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 20 }}>
-          {orders.map((order) => (
-            <motion.div 
-              key={order.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{ background: '#FFF', borderRadius: 24, padding: 'clamp(20px, 4vw, 28px)', border: '1px solid var(--border-subtle)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flex: '1 1 250px' }}>
-                 <div style={{ width: 56, height: 56, background: 'var(--accent-emerald)', color: 'white', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <CreditCard size={24} />
-                 </div>
-                 <div>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Order #{order.id.slice(-6)}</h3>
-                    <div style={{ display: 'flex', gap: 12, fontSize: 13, color: 'var(--text-secondary)' }}>
-                       <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={14} /> {new Date(order.created_at).toLocaleDateString()}</span>
-                       <span style={{ textTransform: 'capitalize', color: order.status === 'completed' ? 'var(--accent-emerald)' : 'var(--accent-gold)', fontWeight: 700 }}>• {order.status}</span>
-                    </div>
-                 </div>
-              </div>
+          {orders.map((order) => {
+            const isPartial = order.status === 'partial';
+            const progress = (order.paid_milestones / order.total_milestones) * 100;
+            const nextMilestoneAmount = order.total_amount / order.total_milestones;
 
-              <div style={{ flex: 1, minWidth: 200 }}>
-                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {/* Note: This assumes vip_numbers was joined or you have the phone in order data */}
-                    <div style={{ padding: '8px 16px', background: 'var(--bg-deep)', borderRadius: 12, border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                       <span style={{ fontWeight: 700, letterSpacing: 1 }}>{order.phone || 'Processing...'}</span>
-                       <a 
-                        href={`https://wa.me/${supportWA.replace(/\D/g, '')}?text=Hi, I purchased the number ${order.phone || order.id} and I need help with activation.`}
-                        target="_blank" rel="noopener noreferrer"
-                        style={{ color: '#25D366', display: 'flex', alignItems: 'center' }}
-                        title="Chat on WhatsApp"
-                       >
-                          <MessageSquare size={16} />
-                       </a>
-                    </div>
-                 </div>
-              </div>
+            const payNextPart = async () => {
+              try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/payments/create-order`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    amount: nextMilestoneAmount,
+                    customer_phone: user?.phone,
+                    items: [order.number_id],
+                    milestoneIndex: order.paid_milestones + 1,
+                    totalMilestones: order.total_milestones
+                  })
+                });
+                const data = await res.json();
+                if (data.payment_session_id) {
+                   // Using window.Cashfree directly or a shared instance
+                   const mode = import.meta.env.VITE_CASHFREE_MODE || "sandbox";
+                   const cf = new (window as any).Cashfree({ mode });
+                   cf.checkout({ paymentSessionId: data.payment_session_id, redirectTarget: '_self' });
+                }
+              } catch (e) {
+                alert('Could not initiate next payment.');
+              }
+            };
 
-              <div style={{ display: 'flex', gap: 12 }}>
-                 <a href={`https://wa.me/${supportWA.replace(/\D/g, '')}?text=Help with Order ${order.id}`} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: '10px 16px', borderRadius: 12, color: '#25D366' }}>
-                    Support <ExternalLink size={14} style={{ marginLeft: 6 }} />
-                 </a>
-              </div>
-            </motion.div>
-          ))}
+            return (
+              <motion.div 
+                key={order.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ background: '#FFF', borderRadius: 24, padding: 'clamp(20px, 4vw, 28px)', border: '1px solid var(--border-subtle)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20, flex: '1 1 250px' }}>
+                   <div style={{ width: 56, height: 56, background: isPartial ? 'var(--accent-gold)' : 'var(--accent-emerald)', color: 'white', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <CreditCard size={24} />
+                   </div>
+                   <div>
+                      <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
+                        {order.vip_numbers?.phone || 'Loading...'} 
+                        {isPartial && <span style={{ fontSize: 12, color: 'var(--accent-gold)', marginLeft: 8 }}>(In Vault)</span>}
+                      </h3>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 13, color: 'var(--text-secondary)' }}>
+                         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={14} /> {new Date(order.created_at).toLocaleDateString()}</span>
+                         <span style={{ textTransform: 'capitalize', color: isPartial ? 'var(--accent-gold)' : 'var(--accent-emerald)', fontWeight: 700 }}>
+                            • {isPartial ? `Part ${order.paid_milestones} Paid` : 'Fully Allotted'}
+                         </span>
+                      </div>
+                   </div>
+                </div>
+
+                <div style={{ flex: '2 1 300px' }}>
+                   {isPartial ? (
+                     <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 12, fontWeight: 700 }}>
+                           <span>Payment Progress</span>
+                           <span>{order.paid_milestones}/{order.total_milestones}</span>
+                        </div>
+                        <div className="progress-bar-container">
+                           <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+                        </div>
+                     </div>
+                   ) : (
+                      <div style={{ padding: '8px 16px', background: 'var(--bg-deep)', borderRadius: 12, border: '1px solid var(--border-subtle)', display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+                         <span style={{ fontWeight: 700, letterSpacing: 1 }}>{order.vip_numbers?.phone || order.phone}</span>
+                         <a 
+                          href={`https://wa.me/${supportWA.replace(/\D/g, '')}?text=Hi, I purchased the number ${order.vip_numbers?.phone} and it is fully paid. Help with transfer.`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ color: '#25D366', display: 'flex', alignItems: 'center' }}
+                         >
+                            <MessageSquare size={16} />
+                         </a>
+                      </div>
+                   )}
+                </div>
+
+                <div style={{ display: 'flex', gap: 12 }}>
+                   {isPartial ? (
+                     <button onClick={payNextPart} className="btn-primary" style={{ height: 40, padding: '0 20px', fontSize: 12 }}>
+                        Pay Part {order.paid_milestones + 1}
+                     </button>
+                   ) : (
+                     <a href={`https://wa.me/${supportWA.replace(/\D/g, '')}?text=Help with Order ${order.id}`} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ height: 40, padding: '0 20px', fontSize: 12, color: '#25D366' }}>
+                        Support <ExternalLink size={14} style={{ marginLeft: 6 }} />
+                     </a>
+                   )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>
