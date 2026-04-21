@@ -118,16 +118,16 @@ const CF_CONFIG = {
 };
 
 app.post('/payments/create-order', async (req, res) => {
-  const { amount, customer_phone } = req.body;
-  try {
-    const orderId = `order_${Date.now()}`;
+    const phoneStr = String(customer_phone || '').replace(/\D/g, '');
+    if (!phoneStr) return res.status(400).json({ error: 'Valid customer phone is required' });
+
     const response = await axios.post(`${CF_CONFIG.baseUrl}/orders`, {
       order_id: orderId,
       order_amount: amount,
       order_currency: "INR",
       customer_details: {
-        customer_id: customer_phone.replace(/\D/g, ''),
-        customer_phone: customer_phone.replace(/\D/g, ''),
+        customer_id: phoneStr,
+        customer_phone: phoneStr,
         customer_email: "customer@vipnumberwala.shop"
       },
       order_meta: {

@@ -40,5 +40,5 @@ projects:
                   property: host
             routes:
               - type: rewrite
-                source: /[^.]*
+                source: /*
                 destination: /index.html
