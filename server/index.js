@@ -66,9 +66,9 @@ app.post('/numbers/bulk-sync', async (req, res) => {
   const results = { upserted: 0, deleted: 0, errors: [] };
 
   if (toDelete?.length) {
-    const { error } = await supabase.from('vip_numbers').delete().in('phone', toDelete);
+    const { data, error } = await supabase.from('vip_numbers').delete().in('phone', toDelete).select('phone');
     if (error) results.errors.push(`Delete error: ${error.message}`);
-    else results.deleted = toDelete.length;
+    else results.deleted = data ? data.length : 0;
   }
 
   if (upsert?.length) {
