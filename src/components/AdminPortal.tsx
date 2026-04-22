@@ -168,6 +168,27 @@ const AdminPortal: React.FC = () => {
         {/* ── Dashboard Tab ── */}
         {activeTab === 'dashboard' && stats && (
           <motion.div key="dashboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="dashboard-grid">
+            
+            {/* ── Toolbar: Range Selectors & Filters ── */}
+            <div className="dashboard-wide-card" style={{ gridColumn: '1 / -1', background: 'white', padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', border: '1px solid #f0f0f0', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ fontWeight: 600, color: '#374151', marginRight: '1rem' }}>⚙️ Analytical Tools:</div>
+              <select className="range-selector" style={{ padding: '0.4rem 1rem', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}>
+                <option>Today</option>
+                <option>Last 7 Days</option>
+                <option>Last 28 Days</option>
+                <option>This Quarter</option>
+                <option>All Time</option>
+                <option>Custom Range...</option>
+              </select>
+              <select className="range-selector" style={{ padding: '0.4rem 1rem', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}>
+                <option>All Categories</option>
+                <option>VVIP Numbers</option>
+                <option>Royal Numbers</option>
+              </select>
+              <button className="btn-outline" style={{ fontSize: '0.85rem', padding: '0.4rem 1rem' }}>⬇ Export CSV Report</button>
+              <button className="btn-outline" style={{ fontSize: '0.85rem', padding: '0.4rem 1rem' }}>🖨 Print Summary</button>
+            </div>
+
              {/* Row 1: Core Financials */}
              <div className="stat-card">
                 <div className="stat-icon"><IndianRupee size={24} /></div>
@@ -234,34 +255,112 @@ const AdminPortal: React.FC = () => {
                 </div>
              </div>
 
-             {/* Live Mini Tables/Tools */}
+             {/* ── Table Matrix: Dedicated Tools ── */}
+             
+             {/* Tool 1: Recent Transactions */}
              <div className="dashboard-wide-card" style={{ gridColumn: '1 / -1', background: 'white', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', border: '1px solid #f0f0f0' }}>
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                 <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Recent Completed Transactions</h3>
-                 <button className="btn-outline" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}>View All Orders</button>
+                 <h3 style={{ fontSize: '1.1rem', margin: 0 }}>💰 Financial Ledger (Recent)</h3>
+                 <button className="btn-outline" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}>View Ledger</button>
                </div>
-               {stats.recentOrders && stats.recentOrders.length > 0 ? (
+               <div className="table-wrap">
+                 {stats.recentOrders && stats.recentOrders.length > 0 ? (
+                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                     <thead>
+                       <tr style={{ borderBottom: '2px solid #f3f4f6', textAlign: 'left', color: '#6b7280' }}>
+                         <th style={{ padding: '0.7rem 0' }}>Date</th>
+                         <th>Transaction Amount</th>
+                         <th>Status</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {stats.recentOrders.map((o: any) => (
+                         <tr key={o.number_id + o.created_at} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                           <td style={{ padding: '0.7rem 0', fontWeight: 500 }}>{new Date(o.created_at).toLocaleDateString()}</td>
+                           <td style={{ color: '#059669', fontWeight: 600 }}>₹{parseFloat(o.paid_amount || '0').toLocaleString()}</td>
+                           <td><span className="badge completed">Completed</span></td>
+                         </tr>
+                       ))}
+                     </tbody>
+                   </table>
+                 ) : (
+                   <p style={{ color: '#888', fontSize: '0.9rem', padding: '1rem 0' }}>No recent completed orders.</p>
+                 )}
+               </div>
+             </div>
+
+             {/* Tool 2: Category Breakdown Table */}
+             <div className="dashboard-wide-card" style={{ gridColumn: '1 / -1', background: 'white', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', border: '1px solid #f0f0f0' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                 <h3 style={{ fontSize: '1.1rem', margin: 0 }}>📊 Category Health Matrix</h3>
+               </div>
+               <div className="table-wrap">
                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                    <thead>
                      <tr style={{ borderBottom: '2px solid #f3f4f6', textAlign: 'left', color: '#6b7280' }}>
-                       <th style={{ padding: '0.7rem 0' }}>Date</th>
-                       <th>Amount</th>
-                       <th>Status</th>
+                       <th style={{ padding: '0.7rem 0' }}>Category</th>
+                       <th>Total Active Stock</th>
+                       <th>Total Value</th>
+                       <th>Avg. Profit Margin</th>
                      </tr>
                    </thead>
                    <tbody>
-                     {stats.recentOrders.map((o: any) => (
-                       <tr key={o.number_id + o.created_at} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                         <td style={{ padding: '0.7rem 0', fontWeight: 500 }}>{new Date(o.created_at).toLocaleDateString()}</td>
-                         <td style={{ color: '#059669', fontWeight: 600 }}>₹{parseFloat(o.paid_amount || '0').toLocaleString()}</td>
-                         <td><span className="badge completed">Completed</span></td>
-                       </tr>
+                     {categories.map(cat => {
+                       const catNums = numbers.filter(n => n.category === cat && n.available);
+                       const val = catNums.reduce((acc, num) => acc + parseFloat(num.price.replace(/[^\d.]/g, '') || '0'), 0);
+                       const cost = catNums.reduce((acc, num) => acc + (num.purchaseCost || 0), 0);
+                       const margin = val > 0 ? ((val - cost) / val) * 100 : 0;
+                       return (
+                         <tr key={cat} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                           <td style={{ padding: '0.7rem 0', fontWeight: 600 }}>{cat}</td>
+                           <td>{catNums.length} numbers</td>
+                           <td>₹{val.toLocaleString()}</td>
+                           <td style={{ color: margin > 40 ? '#059669' : '#f59e0b' }}>{margin.toFixed(1)}%</td>
+                         </tr>
+                       )
+                     })}
+                   </tbody>
+                 </table>
+               </div>
+             </div>
+
+             {/* Tool 3: Low Stock / High Value Alerts */}
+             <div className="dashboard-wide-card" style={{ gridColumn: '1 / -1', background: 'white', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', border: '1px solid #f0f0f0' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                 <h3 style={{ fontSize: '1.1rem', margin: 0 }}>🚨 Inventory Alerts (Highest Potential Profit)</h3>
+               </div>
+               <div className="table-wrap">
+                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                   <thead>
+                     <tr style={{ borderBottom: '2px solid #f3f4f6', textAlign: 'left', color: '#6b7280' }}>
+                       <th style={{ padding: '0.7rem 0' }}>Number</th>
+                       <th>Category</th>
+                       <th>Expected Profit</th>
+                       <th>Action</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {numbers
+                       .filter(n => n.available)
+                       .sort((a, b) => {
+                         const pA = parseFloat(a.price.replace(/[^\d.]/g, '') || '0') - (a.purchaseCost || 0);
+                         const pB = parseFloat(b.price.replace(/[^\d.]/g, '') || '0') - (b.purchaseCost || 0);
+                         return pB - pA;
+                       })
+                       .slice(0, 5)
+                       .map(num => (
+                         <tr key={num.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                           <td style={{ padding: '0.7rem 0', fontWeight: 600, fontFamily: 'monospace' }}>{num.phone}</td>
+                           <td><span className="cat-chip">{num.category}</span></td>
+                           <td style={{ color: '#10b981', fontWeight: 600 }}>
+                             ₹{(parseFloat(num.price.replace(/[^\d.]/g, '') || '0') - (num.purchaseCost || 0)).toLocaleString()}
+                           </td>
+                           <td><button className="btn-outline" style={{fontSize:'0.7rem', padding:'0.2rem 0.5rem'}} onClick={() => window.open(`/?search=${num.phone}`, '_blank')}>Push to Top</button></td>
+                         </tr>
                      ))}
                    </tbody>
                  </table>
-               ) : (
-                 <p style={{ color: '#888', fontSize: '0.9rem' }}>No recent completed orders.</p>
-               )}
+               </div>
              </div>
 
           </motion.div>
