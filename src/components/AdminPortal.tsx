@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNumbers } from '../context/NumbersContext';
 import type { VIPNumber } from '../context/NumbersContext';
-import { Trash2, PenLine, Plus, X, ToggleLeft, ToggleRight, TrendingUp, Users, BarChart3, IndianRupee } from 'lucide-react';
+import { Trash2, PenLine, Plus, X, ToggleLeft, ToggleRight, TrendingUp, Users, BarChart3, IndianRupee, Box, Wallet } from 'lucide-react';
 
 const PLANETS = ['Sun', 'Moon', 'Jupiter', 'Rahu', 'Mercury', 'Venus', 'Ketu', 'Saturn', 'Mars'];
 
@@ -168,38 +168,102 @@ const AdminPortal: React.FC = () => {
         {/* ── Dashboard Tab ── */}
         {activeTab === 'dashboard' && stats && (
           <motion.div key="dashboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="dashboard-grid">
+             {/* Row 1: Core Financials */}
              <div className="stat-card">
                 <div className="stat-icon"><IndianRupee size={24} /></div>
                 <div className="stat-info">
-                   <div className="stat-label">Today's Revenue</div>
-                   <div className="stat-value">₹{stats.revenue.today.toLocaleString()}</div>
-                   <div className="stat-progress">7-day: ₹{stats.revenue.last7d.toLocaleString()}</div>
+                   <div className="stat-label">Total Revenue</div>
+                   <div className="stat-value">₹{stats.revenue.total.toLocaleString()}</div>
+                   <div className="stat-progress">
+                     <span style={{color: '#10b981'}}>↑ Today: ₹{stats.revenue.today.toLocaleString()}</span> &nbsp; (7d: ₹{stats.revenue.last7d.toLocaleString()})
+                   </div>
                 </div>
              </div>
+             
              <div className="stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}><TrendingUp size={24} /></div>
                 <div className="stat-info">
-                   <div className="stat-label">Total Profit</div>
+                   <div className="stat-label">Realized Profit</div>
                    <div className="stat-value" style={{ color: '#059669' }}>₹{stats.profit.toLocaleString()}</div>
                    <div className="stat-progress">Margin: {stats.margin.toFixed(1)}%</div>
                 </div>
              </div>
-             <div className="stat-card">
-                <div className="stat-icon" style={{ background: 'rgba(37,99,235,0.1)', color: '#2563eb' }}><Users size={24} /></div>
-                <div className="stat-info">
-                   <div className="stat-label">Web Visitors</div>
-                   <div className="stat-value">{stats.visitors.toLocaleString()}</div>
-                   <div className="stat-progress">Engagement Tracking Active</div>
-                </div>
-             </div>
+
              <div className="stat-card">
                 <div className="stat-icon" style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed' }}><BarChart3 size={24} /></div>
                 <div className="stat-info">
-                   <div className="stat-label">Total Volume</div>
-                   <div className="stat-value">₹{stats.revenue.total.toLocaleString()}</div>
+                   <div className="stat-label">Avg. Order Value</div>
+                   <div className="stat-value">₹{Math.round(stats.aov).toLocaleString()}</div>
                    <div className="stat-progress">{stats.ordersCount} Successful Trans.</div>
                 </div>
              </div>
+
+             {/* Row 2: Traffic & Engagement */}
+             <div className="stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(37,99,235,0.1)', color: '#2563eb' }}><Users size={24} /></div>
+                <div className="stat-info">
+                   <div className="stat-label">Total Site Visitors</div>
+                   <div className="stat-value">{stats.visitors?.total?.toLocaleString()}</div>
+                   <div className="stat-progress" style={{ display: 'flex', gap: '1rem', marginTop: '4px' }}>
+                     <span>📱 {stats.visitors?.mobile} Mobile</span>
+                     <span>💻 {stats.visitors?.desktop} Desktop</span>
+                   </div>
+                </div>
+             </div>
+
+             {/* Row 3: Inventory Health (Calculated Live) */}
+             <div className="stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}><Box /></div>
+                <div className="stat-info">
+                   <div className="stat-label">Live Inventory Value</div>
+                   <div className="stat-value">
+                     ₹{numbers.filter(n => n.available).reduce((acc, num) => acc + parseFloat(num.price.replace(/[^\d.]/g, '') || '0'), 0).toLocaleString()}
+                   </div>
+                   <div className="stat-progress">Selling value of {numbers.filter(n => n.available).length} numbers</div>
+                </div>
+             </div>
+
+             <div className="stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}><Wallet /></div>
+                <div className="stat-info">
+                   <div className="stat-label">Unrealized Potential Profit</div>
+                   <div className="stat-value" style={{ color: '#10b981' }}>
+                     ₹{numbers.filter(n => n.available).reduce((acc, num) => acc + (parseFloat(num.price.replace(/[^\d.]/g, '') || '0') - (num.purchaseCost || 0)), 0).toLocaleString()}
+                   </div>
+                   <div className="stat-progress">Once current stock is sold</div>
+                </div>
+             </div>
+
+             {/* Live Mini Tables/Tools */}
+             <div className="dashboard-wide-card" style={{ gridColumn: '1 / -1', background: 'white', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', border: '1px solid #f0f0f0' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                 <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Recent Completed Transactions</h3>
+                 <button className="btn-outline" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}>View All Orders</button>
+               </div>
+               {stats.recentOrders && stats.recentOrders.length > 0 ? (
+                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                   <thead>
+                     <tr style={{ borderBottom: '2px solid #f3f4f6', textAlign: 'left', color: '#6b7280' }}>
+                       <th style={{ padding: '0.7rem 0' }}>Date</th>
+                       <th>Amount</th>
+                       <th>Status</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {stats.recentOrders.map((o: any) => (
+                       <tr key={o.number_id + o.created_at} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                         <td style={{ padding: '0.7rem 0', fontWeight: 500 }}>{new Date(o.created_at).toLocaleDateString()}</td>
+                         <td style={{ color: '#059669', fontWeight: 600 }}>₹{parseFloat(o.paid_amount || '0').toLocaleString()}</td>
+                         <td><span className="badge completed">Completed</span></td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               ) : (
+                 <p style={{ color: '#888', fontSize: '0.9rem' }}>No recent completed orders.</p>
+               )}
+             </div>
+
           </motion.div>
         )}
 

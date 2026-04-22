@@ -127,9 +127,10 @@ app.get('/admin/stats', async (req, res) => {
       .select('paid_amount, created_at, number_id, status')
       .not('paid_amount', 'eq', 0);
 
-    const { count: visitors } = await supabase
-      .from('site_analytics')
-      .select('*', { count: 'exact', head: true });
+    const { data: analyticsData } = await supabase.from('site_analytics').select('device_type');
+    let mobileCount = 0;
+    let desktopCount = 0;
+    analyticsData?.forEach(a => { if (a.device_type === 'mobile') mobileCount++; else desktopCount++; });
 
     // Calculate time-based revenue
     const now = new Date();
@@ -141,8 +142,10 @@ app.get('/admin/stats', async (req, res) => {
       revenue: { today: 0, last7d: 0, last28d: 0, total: 0 },
       profit: 0,
       margin: 0,
-      visitors: visitors || 0,
-      ordersCount: allPaidOrders?.length || 0
+      visitors: { total: analyticsData?.length || 0, mobile: mobileCount, desktop: desktopCount },
+      ordersCount: allPaidOrders?.length || 0,
+      aov: 0,
+      recentOrders: allPaidOrders?.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5) || []
     };
 
     let totalCost = 0;
@@ -158,7 +161,6 @@ app.get('/admin/stats', async (req, res) => {
     });
 
     // Profit logic: Sold Selling Price - Purchase Cost
-    // We only count profit for completed orders
     const completed = allPaidOrders?.filter(o => o.status === 'completed') || [];
     const { data: numbersInfo } = await supabase.from('vip_numbers').select('id, purchase_cost');
     const costMap = new Map(numbersInfo?.map(n => [n.id, n.purchase_cost]) || []);
@@ -169,6 +171,7 @@ app.get('/admin/stats', async (req, res) => {
 
     stats.profit = stats.revenue.total - totalCost;
     stats.margin = stats.revenue.total > 0 ? (stats.profit / stats.revenue.total) * 100 : 0;
+    stats.aov = stats.ordersCount > 0 ? (stats.revenue.total / stats.ordersCount) : 0;
 
     res.json(stats);
   } catch (e) {
