@@ -78,7 +78,18 @@ app.post('/numbers/bulk-sync', async (req, res) => {
       const { data, error } = await supabase.from('vip_numbers').select('phone');
       if (!error) {
         const existingPhones = new Set(data.map(n => n.phone));
-        for (const item of upsert) {
+        for (const rawItem of upsert) {
+          // Normalize keys for DB (handle both camelCase and snake_case)
+          const item = {
+            phone: rawItem.phone,
+            price: rawItem.price,
+            purchase_cost: rawItem.purchase_cost ?? rawItem.purchaseCost ?? 0,
+            numerology_total: rawItem.numerology_total ?? rawItem.numerologyTotal ?? 1,
+            category: rawItem.category || 'VVIP',
+            energy: rawItem.energy || 'Sun',
+            available: rawItem.available ?? true
+          };
+
           if (existingPhones.has(item.phone)) {
             await supabase.from('vip_numbers').update(item).eq('phone', item.phone);
           } else {
