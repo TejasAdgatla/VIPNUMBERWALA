@@ -21,6 +21,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   useEffect(() => {
     setIsMenuOpen(false);
     window.scrollTo(0, 0);
+
+    // Analytics Hit
+    const trackHit = async () => {
+      let vid = localStorage.getItem('v_id');
+      if (!vid) { vid = 'v_' + Math.random().toString(36).slice(2, 11); localStorage.setItem('v_id', vid); }
+      
+      try {
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/analytics/hit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: location.pathname, visitorId: vid, device: window.innerWidth < 768 ? 'mobile' : 'desktop' })
+        });
+      } catch (e) {}
+    };
+    trackHit();
   }, [location.pathname]);
 
   useEffect(() => {

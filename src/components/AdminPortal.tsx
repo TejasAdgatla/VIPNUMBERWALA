@@ -2,23 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNumbers } from '../context/NumbersContext';
 import type { VIPNumber } from '../context/NumbersContext';
-import { Trash2, PenLine, Plus, X, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Trash2, PenLine, Plus, X, ToggleLeft, ToggleRight, LayoutDashboard, TrendingUp, Users, BarChart3, PieChart, IndianRupee } from 'lucide-react';
 
 const PLANETS = ['Sun', 'Moon', 'Jupiter', 'Rahu', 'Mercury', 'Venus', 'Ketu', 'Saturn', 'Mars'];
 
 const EMPTY_FORM = {
-  phone: '', price: '', numerologyTotal: 1,
+  phone: '', price: '', purchaseCost: 0, numerologyTotal: 1,
   category: '', energy: 'Sun', available: true,
 };
 
 const TABS = [
+  { id: 'dashboard', label: '📊 Insights' },
   { id: 'inventory', label: '📋 VIP Numbers' },
   { id: 'orders',    label: '📦 Orders' },
   { id: 'settings',  label: '⚙️ Settings' },
 ];
 
 const AdminPortal: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('inventory');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const { numbers, categories, addNumber, updateNumber, deleteNumber, refresh: refreshNums } = useNumbers();
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -26,6 +27,16 @@ const AdminPortal: React.FC = () => {
   const [editTarget, setEditTarget] = useState<VIPNumber | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [settings, setSettings] = useState({ support_whatsapp: '918090050091' });
+  const [stats, setStats] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  const fetchStats = async () => {
+    setLoadingStats(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/admin/stats`);
+      if (res.ok) setStats(await res.json());
+    } finally { setLoadingStats(false); }
+  };
 
   const fetchSettings = async () => {
     try {
@@ -46,7 +57,15 @@ const AdminPortal: React.FC = () => {
   const openAddForm = () => { setEditTarget(null); setForm(EMPTY_FORM); setShowForm(true); };
   const openEditForm = (num: VIPNumber) => {
     setEditTarget(num);
-    setForm({ phone: num.phone, price: num.price, numerologyTotal: num.numerologyTotal, category: num.category, energy: num.energy, available: num.available });
+    setForm({ 
+      phone: num.phone, 
+      price: num.price, 
+      purchaseCost: num.purchaseCost || 0,
+      numerologyTotal: num.numerologyTotal, 
+      category: num.category, 
+      energy: num.energy, 
+      available: num.available 
+    });
     setShowForm(true);
   };
   const fetchOrders = async () => {
@@ -58,6 +77,7 @@ const AdminPortal: React.FC = () => {
   };
 
   useEffect(() => { 
+    if (activeTab === 'dashboard') fetchStats();
     if (activeTab === 'orders') fetchOrders(); 
     if (activeTab === 'settings') fetchSettings();
   }, [activeTab]);
@@ -130,7 +150,9 @@ const AdminPortal: React.FC = () => {
         <div className="admin-topbar">
           <div>
             <h1>{TABS.find(t => t.id === activeTab)?.label.replace(/^[^\s]+ /, '') || ''}</h1>
-            <p className="admin-sub">{numbers.length} numbers in inventory · {numbers.filter(n => n.available).length} available</p>
+            <p className="admin-sub">
+              {activeTab === 'dashboard' ? 'Real-time performance and financial insights' : `${numbers.length} numbers in inventory · ${numbers.filter(n => n.available).length} available`}
+            </p>
           </div>
           {activeTab === 'inventory' && (
             <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -143,6 +165,44 @@ const AdminPortal: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* ── Dashboard Tab ── */}
+        {activeTab === 'dashboard' && stats && (
+          <motion.div key="dashboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="dashboard-grid">
+             <div className="stat-card">
+                <div className="stat-icon"><IndianRupee size={24} /></div>
+                <div className="stat-info">
+                   <div className="stat-label">Today's Revenue</div>
+                   <div className="stat-value">₹{stats.revenue.today.toLocaleString()}</div>
+                   <div className="stat-progress">7-day: ₹{stats.revenue.last7d.toLocaleString()}</div>
+                </div>
+             </div>
+             <div className="stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}><TrendingUp size={24} /></div>
+                <div className="stat-info">
+                   <div className="stat-label">Total Profit</div>
+                   <div className="stat-value" style={{ color: '#059669' }}>₹{stats.profit.toLocaleString()}</div>
+                   <div className="stat-progress">Margin: {stats.margin.toFixed(1)}%</div>
+                </div>
+             </div>
+             <div className="stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(37,99,235,0.1)', color: '#2563eb' }}><Users size={24} /></div>
+                <div className="stat-info">
+                   <div className="stat-label">Web Visitors</div>
+                   <div className="stat-value">{stats.visitors.toLocaleString()}</div>
+                   <div className="stat-progress">Engagement Tracking Active</div>
+                </div>
+             </div>
+             <div className="stat-card">
+                <div className="stat-icon" style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed' }}><BarChart3 size={24} /></div>
+                <div className="stat-info">
+                   <div className="stat-label">Total Volume</div>
+                   <div className="stat-value">₹{stats.revenue.total.toLocaleString()}</div>
+                   <div className="stat-progress">{stats.ordersCount} Successful Trans.</div>
+                </div>
+             </div>
+          </motion.div>
+        )}
 
         {/* ── Inventory Tab ── */}
         {activeTab === 'inventory' && (
@@ -296,9 +356,15 @@ const AdminPortal: React.FC = () => {
                   <input type="text" placeholder="+91 XXXXX XXXXX" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} required />
                 </div>
                 <div className="form-row">
-                  <div className="field-group">
-                    <label>Price *</label>
-                    <input type="text" placeholder="₹10,000" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required />
+                  <div className="form-row">
+                    <div className="field-group">
+                      <label>Selling Price (Display)</label>
+                      <input type="text" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="e.g. ₹50,000" required />
+                    </div>
+                    <div className="field-group">
+                      <label>Purchase Cost (Calculations)</label>
+                      <input type="number" value={form.purchaseCost} onChange={e => setForm({ ...form, purchaseCost: parseFloat(e.target.value) })} placeholder="Actual cost" required />
+                    </div>
                   </div>
                   <div className="field-group">
                     <label>Chaldean Number (1–9)</label>
@@ -381,6 +447,15 @@ const AdminPortal: React.FC = () => {
         .row-dimmed td { opacity: 0.4; }
         .td-phone { font-weight: 700; font-family: var(--font-serif); font-size: 0.98rem; }
         .td-price { font-weight: 700; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: white; border-radius: var(--radius-md); padding: 1.5rem; display: flex; align-items: flex-start; gap: 1.25rem; box-shadow: var(--shadow-sm); border: 1px solid #f0f0f0; transition: transform 0.2s, box-shadow 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .stat-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(230,81,0,0.1); color: var(--accent-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .stat-info { flex: 1; }
+        .stat-label { font-size: 0.85rem; font-weight: 600; color: #6b7280; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-value { font-size: 1.65rem; font-weight: 800; color: #111827; line-height: 1.2; margin-bottom: 0.4rem; font-family: var(--font-sans); }
+        .stat-progress { font-size: 0.78rem; font-weight: 500; color: #9ca3af; }
+
         .td-actions { display: flex; gap: 0.5rem; }
         .cat-chip { font-size: 0.72rem; background: var(--secondary-bg); padding: 0.2rem 0.55rem; border-radius: 99px; }
         .num-chip { font-size: 0.7rem; background: var(--accent-color); color: white; padding: 0.18rem 0.5rem; border-radius: 99px; margin-right: 0.3rem; }

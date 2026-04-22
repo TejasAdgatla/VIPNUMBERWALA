@@ -3,7 +3,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 export interface VIPNumber {
   id: string;
   phone: string;
-  price: string;
+  price: string; // This is the selling price
+  purchaseCost: number;
   numerologyTotal: number;
   category: string;
   energy: string;
@@ -18,6 +19,7 @@ function mapFromAPI(n: Record<string, any>): VIPNumber {
     id: String(n.id),
     phone: String(n.phone),
     price: String(n.price),
+    purchaseCost: Number(n.purchase_cost ?? 0),
     numerologyTotal: Number(n.numerology_total ?? 1),
     category: String(n.category),
     energy: String(n.energy),
@@ -29,6 +31,7 @@ function mapToAPI(n: Partial<VIPNumber>) {
   return {
     phone: n.phone,
     price: n.price,
+    purchase_cost: n.purchaseCost,
     numerology_total: n.numerologyTotal,
     category: n.category,
     energy: n.energy,

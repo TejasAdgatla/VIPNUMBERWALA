@@ -94,6 +94,78 @@ app.post('/numbers/bulk-sync', async (req, res) => {
   res.json({ success: true, ...results });
 });
 
+app.post('/analytics/hit', async (req, res) => {
+  if (!hasSupabase) return res.sendStatus(503);
+  const { path, visitorId, device } = req.body;
+  await supabase.from('site_analytics').insert([{ page_path: path, visitor_id: visitorId, device_type: device }]);
+  res.sendStatus(204);
+});
+
+app.get('/admin/stats', async (req, res) => {
+  if (!hasSupabase) return res.status(503).json({ error: 'DB not connected' });
+  
+  try {
+    const { data: orders } = await supabase
+      .from('orders')
+      .select('paid_amount, created_at, number_id, vip_numbers(purchase_cost)')
+      .eq('status', 'completed'); // Only count fully paid orders for profit logic? 
+      // Actually, for revenue we count paid_amount of all orders. 
+    
+    const { data: allPaidOrders } = await supabase
+      .from('orders')
+      .select('paid_amount, created_at, number_id, status')
+      .not('paid_amount', 'eq', 0);
+
+    const { count: visitors } = await supabase
+      .from('site_analytics')
+      .select('*', { count: 'exact', head: true });
+
+    // Calculate time-based revenue
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const last7d = today - (7 * 24 * 60 * 60 * 1000);
+    const last28d = today - (28 * 24 * 60 * 60 * 1000);
+
+    let stats = {
+      revenue: { today: 0, last7d: 0, last28d: 0, total: 0 },
+      profit: 0,
+      margin: 0,
+      visitors: visitors || 0,
+      ordersCount: allPaidOrders?.length || 0
+    };
+
+    let totalCost = 0;
+
+    allPaidOrders?.forEach(o => {
+      const amt = parseFloat(o.paid_amount || 0);
+      const time = new Date(o.created_at).getTime();
+      
+      stats.revenue.total += amt;
+      if (time >= today) stats.revenue.today += amt;
+      if (time >= last7d) stats.revenue.last7d += amt;
+      if (time >= last28d) stats.revenue.last28d += amt;
+    });
+
+    // Profit logic: Sold Selling Price - Purchase Cost
+    // We only count profit for completed orders
+    const completed = allPaidOrders?.filter(o => o.status === 'completed') || [];
+    const { data: numbersInfo } = await supabase.from('vip_numbers').select('id, purchase_cost');
+    const costMap = new Map(numbersInfo?.map(n => [n.id, n.purchase_cost]) || []);
+
+    completed.forEach(o => {
+      totalCost += parseFloat(costMap.get(o.number_id) || 0);
+    });
+
+    stats.profit = stats.revenue.total - totalCost;
+    stats.margin = stats.revenue.total > 0 ? (stats.profit / stats.revenue.total) * 100 : 0;
+
+    res.json(stats);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/numbers', async (req, res) => {
   const { data, error } = await supabase.from('vip_numbers').insert([req.body]).select();
   if (error) return res.status(500).json({ error: error.message });
