@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNumbers } from '../context/NumbersContext';
 import type { VIPNumber } from '../context/NumbersContext';
-import { Trash2, PenLine, Plus, X, ToggleLeft, ToggleRight, LayoutDashboard, TrendingUp, Users, BarChart3, PieChart, IndianRupee } from 'lucide-react';
+import { Trash2, PenLine, Plus, X, ToggleLeft, ToggleRight, TrendingUp, Users, BarChart3, IndianRupee } from 'lucide-react';
 
 const PLANETS = ['Sun', 'Moon', 'Jupiter', 'Rahu', 'Mercury', 'Venus', 'Ketu', 'Saturn', 'Mars'];
 
@@ -28,14 +28,13 @@ const AdminPortal: React.FC = () => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [settings, setSettings] = useState({ support_whatsapp: '918090050091' });
   const [stats, setStats] = useState<any>(null);
-  const [loadingStats, setLoadingStats] = useState(false);
+
 
   const fetchStats = async () => {
-    setLoadingStats(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/admin/stats`);
       if (res.ok) setStats(await res.json());
-    } finally { setLoadingStats(false); }
+    } catch (e) {}
   };
 
   const fetchSettings = async () => {
